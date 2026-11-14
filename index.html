@@ -31,7 +31,7 @@
             border-radius: 1rem;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             width: 100%;
-            max-width: 440px;
+            max-width: 480px;
             text-align: center;
             box-sizing: border-box;
         }
@@ -48,7 +48,7 @@
             margin-bottom: 1rem;
             text-align: left;
         }
-        .user-info img { width: 45px; height: 45px; border-radius: 50%; }
+        .user-info img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
         .user-info div { overflow: hidden; }
         .user-info h4 { margin: 0; font-size: 0.95rem; color: #0f172a; }
         button.logout-btn {
@@ -100,6 +100,7 @@
             margin-top: 1rem;
         }
         .next-btn:hover { background: #1d4ed8; }
+        .next-btn:disabled { background: #94a3b8; cursor: not-allowed; }
         
         /* Circular Face ID Viewfinder */
         .face-container {
@@ -135,6 +136,29 @@
             font-size: 0.9rem;
         }
         .capture-ring-btn:hover { background: #0284c7; }
+
+        /* Review Summary Box */
+        .review-box {
+            text-align: left;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            max-height: 280px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        .review-box p { margin: 0.4rem 0; color: #334155; text-align: left; }
+        .review-face-thumb {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary);
+            display: block;
+            margin: 0 auto 0.75rem auto;
+        }
     </style>
 </head>
 <body>
@@ -158,9 +182,9 @@
             </div>
         </div>
 
-        <!-- Magical Wizard Steps (10 Steps) -->
+        <!-- Magical Wizard Steps (10 Steps + Review Step) -->
         <div id="wizard-section" class="hidden">
-            <span id="wizard-badge" class="step-badge">Step 1 of 10</span>
+            <span id="wizard-badge" class="step-badge">Step 1 of 11</span>
             
             <form id="wizard-form" onsubmit="handleWizardStep(event)">
                 <div id="wizard-container"></div>
@@ -214,6 +238,7 @@
         let currentStep = 1;
         let userDataBuffer = {};
         let videoStream = null;
+        let countdownTimer = null;
 
         function parseJwt(token) {
             var base64Url = token.split('.')[1];
@@ -231,12 +256,10 @@
 
             localStorage.setItem('marketplace_temp_user', JSON.stringify(userDataBuffer));
 
-            // Auto-check if profile already exists in local storage & backend
             const savedProfile = localStorage.getItem('profile_' + payload.email);
             if (savedProfile) {
                 showApp(JSON.parse(savedProfile));
             } else {
-                // Check backend if user already completed setup previously
                 try {
                     const res = await fetch('/api/login?email=' + encodeURIComponent(payload.email));
                     const data = await res.json();
@@ -247,7 +270,6 @@
                     }
                 } catch(e) { console.error(e); }
 
-                // Otherwise, start wizard from step 1
                 document.getElementById('login-section').classList.add('hidden');
                 document.getElementById('wizard-section').classList.remove('hidden');
                 renderWizardStep();
@@ -257,8 +279,13 @@
         function renderWizardStep() {
             const container = document.getElementById('wizard-container');
             const badge = document.getElementById('wizard-badge');
-            badge.innerText = `Step ${currentStep} of 10`;
+            const submitBtn = document.getElementById('wizard-submit-btn');
+            
+            // Step 11 is the Review & Locked Verification Step
+            badge.innerText = currentStep <= 10 ? `Step ${currentStep} of 10` : `Final Verification`;
             container.innerHTML = '';
+            submitBtn.disabled = false;
+            submitBtn.innerText = currentStep === 11 ? "Verify & Complete" : "Next";
 
             if (currentStep !== 9 && videoStream) {
                 videoStream.getTracks().forEach(track => track.stop());
@@ -269,25 +296,25 @@
                 container.innerHTML = `
                     <div class="form-step">
                         <label>Hi, please enter your SWEET NAME (Max 30 chars)</label>
-                        <input type="text" id="ans-sweetName" maxlength="30" required placeholder="Your sweet name...">
+                        <input type="text" id="ans-sweetName" maxlength="30" required placeholder="Your sweet name..." value="${userDataBuffer.sweetName || ''}">
                     </div>`;
             } else if (currentStep === 2) {
                 container.innerHTML = `
                     <div class="form-step">
                         <label>Please enter your Age</label>
-                        <input type="number" id="ans-age" required placeholder="e.g. 25">
+                        <input type="number" id="ans-age" required placeholder="e.g. 25" value="${userDataBuffer.age || ''}">
                     </div>`;
             } else if (currentStep === 3) {
                 container.innerHTML = `
                     <div class="form-step">
                         <label>Marital Status</label>
                         <select id="ans-maritalStatus" onchange="checkMarital(this.value)">
-                            <option value="Single">Single</option>
-                            <option value="Married">Married</option>
-                            <option value="Divorced">Divorced</option>
+                            <option value="Single" ${userDataBuffer.maritalStatus === 'Single' ? 'selected' : ''}>Single</option>
+                            <option value="Married" ${userDataBuffer.maritalStatus === 'Married' ? 'selected' : ''}>Married</option>
+                            <option value="Divorced" ${userDataBuffer.maritalStatus === 'Divorced' ? 'selected' : ''}>Divorced</option>
                         </select>
                     </div>
-                    <div id="children-field" class="form-step hidden" style="margin-top:0.75rem;">
+                    <div id="children-field" class="form-step ${userDataBuffer.maritalStatus === 'Married' ? '' : 'hidden'}" style="margin-top:0.75rem;">
                         <label>How many children?</label>
                         <select id="ans-children">
                             <option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option>
@@ -297,7 +324,7 @@
                 container.innerHTML = `
                     <div class="form-step">
                         <label>Date of Birth (DOB)</label>
-                        <input type="date" id="ans-dob" required>
+                        <input type="date" id="ans-dob" required value="${userDataBuffer.dob || ''}">
                     </div>`;
             } else if (currentStep === 5) {
                 container.innerHTML = `
@@ -350,13 +377,13 @@
                         <div class="face-container">
                             <div class="face-circle">
                                 <video id="face-video" autoplay playsinline></video>
-                                <img id="face-preview" class="hidden" alt="Captured Face">
+                                <img id="face-preview" class="${userDataBuffer.faceIdUrl ? '' : 'hidden'}" src="${userDataBuffer.faceIdUrl || ''}" alt="Captured Face">
                             </div>
                             <canvas id="face-canvas" class="hidden"></canvas>
                             <button type="button" onclick="captureFace()" class="capture-ring-btn">Capture Face</button>
                         </div>
                     </div>`;
-                setTimeout(initCamera, 300);
+                if (!userDataBuffer.faceIdUrl) setTimeout(initCamera, 300);
             } else if (currentStep === 10) {
                 container.innerHTML = `
                     <div class="form-step">
@@ -364,7 +391,54 @@
                         <input type="tel" id="ans-mobile" maxlength="10" required placeholder="Enter 10 digits" oninput="maskMobile(this)">
                         <p id="mobile-preview" style="font-size:0.8rem; color:#64748b; margin-top:0.25rem;"></p>
                     </div>`;
+            } else if (currentStep === 11) {
+                // Step 11: Locked Review Screen with 5-Second Countdown Timer
+                container.innerHTML = `
+                    <div class="form-step" style="text-align:center;">
+                        <label style="text-align:center; font-size: 1.1rem; margin-bottom: 0.5rem;">Review Your Details</label>
+                        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1rem;">Please check your submitted information and captured photo below.</p>
+                        
+                        <img src="${userDataBuffer.faceIdUrl}" class="review-face-thumb" alt="Face ID">
+                        
+                        <div class="review-box">
+                            <p><strong>Sweet Name:</strong> ${userDataBuffer.sweetName}</p>
+                            <p><strong>Age:</strong> ${userDataBuffer.age}</p>
+                            <p><strong>Marital Status:</strong> ${userDataBuffer.maritalStatus} ${userDataBuffer.maritalStatus === 'Married' ? '(' + userDataBuffer.children + ' children)' : ''}</p>
+                            <p><strong>DOB:</strong> ${userDataBuffer.dob}</p>
+                            <p><strong>Religion:</strong> ${userDataBuffer.religion}</p>
+                            <p><strong>Employment:</strong> ${userDataBuffer.employmentStatus}</p>
+                            <p><strong>Aadhar:</strong> ${userDataBuffer.aadharNumber}</p>
+                            <p><strong>PAN:</strong> ${userDataBuffer.panNumber}</p>
+                            <p><strong>Mobile:</strong> ${userDataBuffer.mobileNumber}</p>
+                        </div>
+                        
+                        <p id="countdown-text" style="font-weight: 600; color: #d97706; font-size: 0.9rem; margin-top: 0.5rem;">Please review. Button unlocks in 5 seconds...</p>
+                    </div>`;
+                
+                startLockoutTimer();
             }
+        }
+
+        function startLockoutTimer() {
+            const submitBtn = document.getElementById('wizard-submit-btn');
+            const countdownEl = document.getElementById('countdown-text');
+            let timeLeft = 5;
+
+            submitBtn.disabled = true;
+
+            if (countdownTimer) clearInterval(countdownTimer);
+
+            countdownTimer = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    countdownEl.innerText = `Please review. Button unlocks in ${timeLeft} seconds...`;
+                } else {
+                    clearInterval(countdownTimer);
+                    countdownEl.innerText = "You can now verify and complete your registration!";
+                    countdownEl.style.color = "#16a34a";
+                    submitBtn.disabled = false;
+                }
+            }, 1000);
         }
 
         function checkMarital(val) {
@@ -431,7 +505,7 @@
 
             preview.src = dataUrl;
             preview.classList.remove('hidden');
-            video.classList.add('hidden');
+            if (video) video.classList.add('hidden');
 
             if (videoStream) {
                 videoStream.getTracks().forEach(track => track.stop());
@@ -472,23 +546,29 @@
                 userDataBuffer.mobileNumber = `XXXXXX${raw.slice(6)}`;
             }
 
-            // Sync instantly to backend and local storage per step
-            try {
-                await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(userDataBuffer)
-                });
-                localStorage.setItem('profile_' + userDataBuffer.email, JSON.stringify(userDataBuffer));
-            } catch (err) {
-                console.error("Sync error:", err);
-            }
-
-            if (currentStep < 10) {
+            if (currentStep < 11) {
                 currentStep++;
                 renderWizardStep();
             } else {
-                showApp(userDataBuffer);
+                // Step 11: Final verification click -> Sync to D1 backend and local storage
+                try {
+                    const res = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(userDataBuffer)
+                    });
+                    const result = await res.json();
+                    
+                    if (result.success || res.ok) {
+                        localStorage.setItem('profile_' + userDataBuffer.email, JSON.stringify(userDataBuffer));
+                        showApp(userDataBuffer);
+                    } else {
+                        alert("Error saving profile to backend: " + (result.error || 'Unknown error'));
+                    }
+                } catch (err) {
+                    console.error("Sync error:", err);
+                    alert("Network error while syncing with Cloudflare D1 backend.");
+                }
             }
         }
 
