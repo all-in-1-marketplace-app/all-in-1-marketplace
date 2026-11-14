@@ -1,1 +1,283 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All-in-1 Marketplace</title>
+    <!-- Google Identity Services SDK -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .container {
+            background: var(--card-bg);
+            padding: 2rem 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 440px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        h1 { margin-bottom: 0.5rem; font-size: 1.75rem; color: #0f172a; }
+        p { color: #64748b; margin-bottom: 1.5rem; }
+        .hidden { display: none !important; }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: #f1f5f9;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+        .user-info img { width: 45px; height: 45px; border-radius: 50%; }
+        .user-info div { overflow: hidden; }
+        .user-info h4 { margin: 0; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #0f172a; }
+        .user-info span { font-size: 0.8rem; color: #64748b; }
+        button.logout-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-left: auto;
+        }
+        button.logout-btn:hover { background: #dc2626; }
+        #google-btn-wrapper {
+            display: flex;
+            justify-content: center;
+            margin: 1.5rem 0;
+        }
+        .step-badge {
+            display: inline-block;
+            background: #dbeafe;
+            color: #1d4ed8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .form-group {
+            text-align: left;
+            margin-bottom: 0.75rem;
+        }
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #475569;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.375rem;
+            box-sizing: border-box;
+            margin-top: 0.25rem;
+            font-size: 0.9rem;
+        }
+        .submit-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 0.6rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+        .submit-btn:hover { background: #1d4ed8; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>All-in-1 Marketplace</h1>
+        <p>Shops, Hotels, Rentals, Foods & More</p>
+
+        <!-- Step 1: Mandatory Google Login View -->
+        <div id="login-section">
+            <span class="step-badge">Step 1 of 2</span>
+            <p style="font-size: 0.95rem; font-weight: 500; color: #334155;">Please sign in with your Google account to continue.</p>
+            
+            <div id="google-btn-wrapper">
+                <div id="g_id_onload"
+                     data-client_id="1083210338455-7iqi0j7dq5olpvvplt8omj04a4rd2524.apps.googleusercontent.com"
+                     data-callback="handleCredentialResponse"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-shape="rectangular"
+                     data-theme="outline"
+                     data-text="sign_in_with"
+                     data-size="large"
+                     data-logo_alignment="left">
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Main Dashboard & Business Registration Form -->
+        <div id="app-section" class="hidden">
+            <div class="user-info">
+                <img id="user-avatar" src="" alt="Avatar">
+                <div>
+                    <h4 id="user-name"></h4>
+                    <span id="user-email"></span>
+                </div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 1.25rem 0;">
+
+            <h3 style="color: #0f172a; margin-bottom: 0.75rem; font-size: 1.05rem; text-align: left;">Register Your Business</h3>
+
+            <form id="business-form" onsubmit="registerBusiness(event)">
+                <div class="form-group">
+                    <label>Business Name</label>
+                    <input type="text" id="b-name" placeholder="e.g. Himalayan Cafe" required>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="b-category">
+                        <option value="Shop">Shop / Retail</option>
+                        <option value="Hotel">Hotel / Homestay</option>
+                        <option value="Rental">Rental Service</option>
+                        <option value="Food">Restaurant / Food</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="b-phone" placeholder="e.g. +91 9876543210" required>
+                </div>
+                <div class="form-group">
+                    <label>Address / Location</label>
+                    <input type="text" id="b-address" placeholder="e.g. MG Road, Gangtok" required>
+                </div>
+                <button type="submit" class="submit-btn">Submit Registration</button>
+            </form>
+            <p id="b-msg" style="font-size: 0.85rem; margin-top: 0.75rem; font-weight: 500;"></p>
+        </div>
+    </div>
+
+    <script>
+        function parseJwt(token) {
+            var base64Url = token.split('.')[1];
+            var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                'use strict';
+                return '%' + ('0' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+
+        async function handleCredentialResponse(response) {
+            const responsePayload = parseJwt(response.credential);
+            
+            const userData = {
+                name: responsePayload.name,
+                email: responsePayload.email,
+                picture: responsePayload.picture
+            };
+
+            localStorage.setItem('marketplace_user', JSON.stringify(userData));
+
+            // Sync user login to backend D1 database
+            try {
+                await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+            } catch (err) {
+                console.error("Failed to sync user:", err);
+            }
+
+            showApp(userData);
+        }
+
+        async function registerBusiness(event) {
+            event.preventDefault();
+            const user = JSON.parse(localStorage.getItem('marketplace_user'));
+            const msgEl = document.getElementById('b-msg');
+            
+            const payload = {
+                email: user.email,
+                businessName: document.getElementById('b-name').value,
+                category: document.getElementById('b-category').value,
+                phone: document.getElementById('b-phone').value,
+                address: document.getElementById('b-address').value
+            };
+
+            try {
+                const res = await fetch('/api/register-business', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                if(data.success) {
+                    msgEl.style.color = '#16a34a';
+                    msgEl.innerText = "Business registered successfully!";
+                    document.getElementById('business-form').reset();
+                } else {
+                    msgEl.style.color = '#dc2626';
+                    msgEl.innerText = "Error: " + data.error;
+                }
+            } catch(err) {
+                msgEl.style.color = '#dc2626';
+                msgEl.innerText = "Network error submitting form.";
+                console.error(err);
+            }
+        }
+
+        function showApp(user) {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('app-section').classList.remove('hidden');
+            
+            document.getElementById('user-name').innerText = user.name;
+            document.getElementById('user-email').innerText = user.email;
+            document.getElementById('user-avatar').src = user.picture;
+        }
+
+        function logout() {
+            localStorage.removeItem('marketplace_user');
+            document.getElementById('app-section').classList.add('hidden');
+            document.getElementById('login-section').classList.remove('hidden');
+        }
+
+        window.onload = function () {
+            const savedUser = localStorage.getItem('marketplace_user');
+            if (savedUser) {
+                showApp(JSON.parse(savedUser));
+            }
+        }
+    </script>
+</body>
+</html>
