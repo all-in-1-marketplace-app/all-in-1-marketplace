@@ -100,7 +100,41 @@
             margin-top: 1rem;
         }
         .next-btn:hover { background: #1d4ed8; }
-        video, canvas { width: 100%; border-radius: 0.5rem; background: #000; margin-top: 0.5rem; }
+        
+        /* Circular Face ID Viewfinder */
+        .face-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 1rem 0;
+        }
+        .face-circle {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 4px solid var(--primary);
+            position: relative;
+            background: #000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .face-circle video, .face-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .capture-ring-btn {
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 0.5rem 1.25rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        .capture-ring-btn:hover { background: #0284c7; }
     </style>
 </head>
 <body>
@@ -124,9 +158,9 @@
             </div>
         </div>
 
-        <!-- Magical Sequential Wizard Steps (Expanded to 9 Steps) -->
+        <!-- Magical Wizard Steps (10 Steps) -->
         <div id="wizard-section" class="hidden">
-            <span id="wizard-badge" class="step-badge">Step 1 of 9</span>
+            <span id="wizard-badge" class="step-badge">Step 1 of 10</span>
             
             <form id="wizard-form" onsubmit="handleWizardStep(event)">
                 <div id="wizard-container"></div>
@@ -197,23 +231,35 @@
 
             localStorage.setItem('marketplace_temp_user', JSON.stringify(userDataBuffer));
 
+            // Auto-check if profile already exists in local storage & backend
             const savedProfile = localStorage.getItem('profile_' + payload.email);
-            if (!savedProfile) {
+            if (savedProfile) {
+                showApp(JSON.parse(savedProfile));
+            } else {
+                // Check backend if user already completed setup previously
+                try {
+                    const res = await fetch('/api/login?email=' + encodeURIComponent(payload.email));
+                    const data = await res.json();
+                    if (data.exists && data.profile) {
+                        localStorage.setItem('profile_' + payload.email, JSON.stringify(data.profile));
+                        showApp(data.profile);
+                        return;
+                    }
+                } catch(e) { console.error(e); }
+
+                // Otherwise, start wizard from step 1
                 document.getElementById('login-section').classList.add('hidden');
                 document.getElementById('wizard-section').classList.remove('hidden');
                 renderWizardStep();
-            } else {
-                showApp(JSON.parse(savedProfile));
             }
         }
 
         function renderWizardStep() {
             const container = document.getElementById('wizard-container');
             const badge = document.getElementById('wizard-badge');
-            badge.innerText = `Step ${currentStep} of 9`;
+            badge.innerText = `Step ${currentStep} of 10`;
             container.innerHTML = '';
 
-            // Stop camera if leaving step 9
             if (currentStep !== 9 && videoStream) {
                 videoStream.getTracks().forEach(track => track.stop());
                 videoStream = null;
@@ -299,14 +345,25 @@
             } else if (currentStep === 9) {
                 container.innerHTML = `
                     <div class="form-step" style="text-align:center;">
-                        <label>Mandatory Face ID Verification</label>
-                        <p style="font-size:0.8rem; color:#64748b;">Position your face in front of the camera and capture snapshot.</p>
-                        <video id="face-video" autoplay playsinline></video>
-                        <canvas id="face-canvas" class="hidden"></canvas>
-                        <button type="button" onclick="captureFace()" class="submit-btn" style="background:#0ea5e9; margin-top:0.5rem;">Capture Face ID</button>
-                        <img id="face-preview" class="hidden" style="width:100%; border-radius:0.5rem; margin-top:0.5rem;" alt="Captured Face">
+                        <label style="text-align:center;">Mandatory Face ID Verification</label>
+                        <p style="font-size:0.8rem; color:#64748b;">Position your face inside the circle</p>
+                        <div class="face-container">
+                            <div class="face-circle">
+                                <video id="face-video" autoplay playsinline></video>
+                                <img id="face-preview" class="hidden" alt="Captured Face">
+                            </div>
+                            <canvas id="face-canvas" class="hidden"></canvas>
+                            <button type="button" onclick="captureFace()" class="capture-ring-btn">Capture Face</button>
+                        </div>
                     </div>`;
                 setTimeout(initCamera, 300);
+            } else if (currentStep === 10) {
+                container.innerHTML = `
+                    <div class="form-step">
+                        <label>10-Digit Mobile Number</label>
+                        <input type="tel" id="ans-mobile" maxlength="10" required placeholder="Enter 10 digits" oninput="maskMobile(this)">
+                        <p id="mobile-preview" style="font-size:0.8rem; color:#64748b; margin-top:0.25rem;"></p>
+                    </div>`;
             }
         }
 
@@ -340,6 +397,15 @@
             }
         }
 
+        function maskMobile(input) {
+            let val = input.value.replace(/\D/g, '');
+            if (val.length === 10) {
+                document.getElementById('mobile-preview').innerText = `Preview: XXXXXX${val.slice(6)}`;
+            } else {
+                document.getElementById('mobile-preview').innerText = `Must be 10 digits (Entered: ${val.length})`;
+            }
+        }
+
         async function initCamera() {
             try {
                 videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
@@ -356,7 +422,7 @@
             const preview = document.getElementById('face-preview');
             
             canvas.width = video.videoWidth || 320;
-            canvas.height = video.videoHeight || 240;
+            canvas.height = video.videoHeight || 320;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             
@@ -401,6 +467,10 @@
                     return;
                 }
             }
+            if (currentStep === 10) {
+                let raw = document.getElementById('ans-mobile').value.replace(/\D/g, '');
+                userDataBuffer.mobileNumber = `XXXXXX${raw.slice(6)}`;
+            }
 
             // Sync instantly to backend and local storage per step
             try {
@@ -414,7 +484,7 @@
                 console.error("Sync error:", err);
             }
 
-            if (currentStep < 9) {
+            if (currentStep < 10) {
                 currentStep++;
                 renderWizardStep();
             } else {
