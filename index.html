@@ -315,7 +315,6 @@
         </div>
 
         <!-- Intent Selection Section ("What are you here for today?") -->
-        <!-- SHOWN EVERY SINGLE TIME USER RETURNS OR REFRESHES -->
         <div id="intent-section" class="hidden">
             <span class="step-badge">Marketplace Intent</span>
             <h2>What are you here for today?</h2>
@@ -342,7 +341,7 @@
             <button type="button" class="next-btn" onclick="proceedToDashboard()">Continue to Dashboard</button>
         </div>
 
-        <!-- Main Dashboard & Business Registration -->
+        <!-- Main Dashboard -->
         <div id="app-section" class="hidden">
             <!-- Top Header Bar with Left Face ID Avatar and Right Hamburger Menu -->
             <div class="dashboard-topbar">
@@ -360,33 +359,10 @@
                 </div>
             </div>
 
-            <h3 style="color: #0f172a; margin-bottom: 0.75rem; font-size: 1.05rem; text-align: left;">Register Your Business</h3>
-
-            <form id="business-form" onsubmit="registerBusiness(event)">
-                <div class="form-step">
-                    <label>Business Name</label>
-                    <input type="text" id="b-name" placeholder="e.g. Himalayan Cafe" required>
-                </div>
-                <div class="form-step">
-                    <label>Category</label>
-                    <select id="b-category">
-                        <option value="Shop">Shop / Retail</option>
-                        <option value="Hotel">Hotel / Homestay</option>
-                        <option value="Rental">Rental Service</option>
-                        <option value="Food">Restaurant / Food</option>
-                    </select>
-                </div>
-                <div class="form-step">
-                    <label>Phone Number</label>
-                    <input type="tel" id="b-phone" placeholder="e.g. +91 9876543210" required>
-                </div>
-                <div class="form-step">
-                    <label>Address / Location</label>
-                    <input type="text" id="b-address" placeholder="e.g. MG Road, Gangtok" required>
-                </div>
-                <button type="submit" class="next-btn">Submit Registration</button>
-            </form>
-            <p id="b-msg" style="font-size: 0.85rem; margin-top: 0.75rem; font-weight: 500;"></p>
+            <div style="padding: 1.5rem 0; text-align: left;">
+                <h3 style="color: #0f172a; margin-top: 0;">Welcome to your Dashboard</h3>
+                <p style="font-size: 0.9rem; color: #475569;">You are successfully verified. Explore your selected marketplace service or use the menu above to switch activities.</p>
+            </div>
 
             <!-- AI Helping Bot Section at the Bottom -->
             <div class="ai-bot-bar">
@@ -453,7 +429,6 @@
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('intent-section').classList.remove('hidden');
 
-            // Check if there is a past activity/intent stored
             const pastIntent = localStorage.getItem('last_intent_' + userDataBuffer.email);
             const pastBtn = document.getElementById('past-activity-btn');
             if (pastIntent) {
@@ -601,7 +576,7 @@
                             <p><strong>DOB:</strong> ${userDataBuffer.dob}</p>
                             <p><strong>Religion:</strong> ${userDataBuffer.religion}</p>
                             <p><strong>Employment:</strong> ${userDataBuffer.employmentStatus}</p>
-                            <p><strong>Aadhar:</strong> ${userDataBuffer.aadharNumber}</p>
+                            <p><strong>Aadhar:</strong> [Aadhaar Redacted]</p>
                             <p><strong>PAN:</strong> ${userDataBuffer.panNumber}</p>
                             <p><strong>Mobile:</strong> ${userDataBuffer.mobileNumber}</p>
                         </div>
@@ -832,9 +807,7 @@
             }
             
             const q = query.toLowerCase();
-            if (q.includes('business') || q.includes('register')) {
-                responseBox.innerText = "AI Bot: You can register your business using the form above by providing your business name, category, phone number, and location address.";
-            } else if (q.includes('intent') || q.includes('change')) {
+            if (q.includes('intent') || q.includes('change')) {
                 responseBox.innerText = "AI Bot: You can change your marketplace intent anytime by clicking the hamburger menu in the top-right corner and selecting 'Change Intent'.";
             } else if (q.includes('face') || q.includes('photo')) {
                 responseBox.innerText = "AI Bot: Your Face ID is securely saved both locally and in your Cloudflare D1 database for quick verification.";
@@ -843,48 +816,11 @@
             }
         }
 
-        async function registerBusiness(event) {
-            event.preventDefault();
-            const temp = JSON.parse(localStorage.getItem('marketplace_temp_user'));
-            const profile = JSON.parse(localStorage.getItem('profile_' + temp.email));
-            const msgEl = document.getElementById('b-msg');
-            
-            const payload = {
-                email: profile.email,
-                businessName: document.getElementById('b-name').value,
-                category: document.getElementById('b-category').value,
-                phone: document.getElementById('b-phone').value,
-                address: document.getElementById('b-address').value
-            };
-
-            try {
-                const res = await fetch('/api/register-business', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                
-                if(data.success) {
-                    msgEl.style.color = '#16a34a';
-                    msgEl.innerText = "Business registered successfully!";
-                    document.getElementById('business-form').reset();
-                } else {
-                    msgEl.style.color = '#dc2626';
-                    msgEl.innerText = "Error: " + data.error;
-                }
-            } catch(err) {
-                msgEl.style.color = '#dc2626';
-                msgEl.innerText = "Network error submitting form.";
-            }
-        }
-
         function logout() {
             localStorage.clear();
             location.reload();
         }
 
-        // On load: check if user has already completed onboarding. If yes, skip Google login and show Intent Selection directly!
         window.onload = function () {
             const keys = Object.keys(localStorage);
             const profileKey = keys.find(k => k.startsWith('profile_'));
@@ -899,7 +835,6 @@
                 }
             }
 
-            // If no profile found, show Google login for first-time onboarding
             document.getElementById('login-section').classList.remove('hidden');
         }
     </script>
