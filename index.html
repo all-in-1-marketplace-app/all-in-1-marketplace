@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -53,7 +52,6 @@
         .user-info img { width: 45px; height: 45px; border-radius: 50%; }
         .user-info div { overflow: hidden; }
         .user-info h4 { margin: 0; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #0f172a; }
-        .user-info span { font-size: 0.8rem; color: #64748b; }
         button.logout-btn {
             background: #ef4444;
             color: white;
@@ -122,7 +120,7 @@
 
         <!-- Step 1: Mandatory Google Login View -->
         <div id="login-section">
-            <span class="step-badge">Step 1 of 2</span>
+            <span class="step-badge">Step 1 of 3</span>
             <p style="font-size: 0.95rem; font-weight: 500; color: #334155;">Please sign in with your Google account to continue.</p>
             
             <div id="google-btn-wrapper">
@@ -142,13 +140,26 @@
             </div>
         </div>
 
-        <!-- Step 2: Main Dashboard & Business Registration Form -->
+        <!-- Step 2: Sweet Name Prompt (Shown if name is not set) -->
+        <div id="name-section" class="hidden">
+            <span class="step-badge">Step 2 of 3</span>
+            <h3 style="color: #0f172a; font-size: 1.1rem; margin-bottom: 0.5rem;">HI PLEASE ENTER YOUR SWEET NAME</h3>
+            <p style="font-size: 0.85rem; margin-bottom: 1rem;">(Max 30 characters allowed)</p>
+            
+            <form onsubmit="saveSweetName(event)">
+                <div class="form-group">
+                    <input type="text" id="sweet-name-input" maxlength="30" placeholder="Enter your sweet name..." required style="text-align: center; font-size: 1rem; font-weight: 600;">
+                </div>
+                <button type="submit" class="submit-btn">Continue</button>
+            </form>
+        </div>
+
+        <!-- Step 3: Main Dashboard & Business Registration Form -->
         <div id="app-section" class="hidden">
             <div class="user-info">
                 <img id="user-avatar" src="" alt="Avatar">
                 <div>
                     <h4 id="user-name"></h4>
-                    <span id="user-email"></span>
                 </div>
                 <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
@@ -199,14 +210,38 @@
         async function handleCredentialResponse(response) {
             const responsePayload = parseJwt(response.credential);
             
-            const userData = {
-                name: responsePayload.name,
+            let userData = {
                 email: responsePayload.email,
-                picture: responsePayload.picture
+                picture: responsePayload.picture,
+                name: localStorage.getItem('sweet_name_' + responsePayload.email) || ''
             };
 
-            localStorage.setItem('marketplace_user', JSON.stringify(userData));
+            localStorage.setItem('marketplace_temp_user', JSON.stringify(userData));
 
+            if (!userData.name) {
+                // Show Sweet Name prompt if name isn't set yet
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('name-section').classList.remove('hidden');
+            } else {
+                await syncUserAndShowApp(userData);
+            }
+        }
+
+        async function saveSweetName(event) {
+            event.preventDefault();
+            const sweetName = document.getElementById('sweet-name-input').value.trim();
+            if(!sweetName) return;
+
+            let tempUser = JSON.parse(localStorage.getItem('marketplace_temp_user'));
+            tempUser.name = sweetName;
+
+            localStorage.setItem('sweet_name_' + tempUser.email, sweetName);
+            localStorage.setItem('marketplace_user', JSON.stringify(tempUser));
+
+            await syncUserAndShowApp(tempUser);
+        }
+
+        async function syncUserAndShowApp(userData) {
             // Sync user login to backend D1 database
             try {
                 await fetch('/api/login', {
@@ -218,7 +253,12 @@
                 console.error("Failed to sync user:", err);
             }
 
-            showApp(userData);
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('name-section').classList.add('hidden');
+            document.getElementById('app-section').classList.remove('hidden');
+            
+            document.getElementById('user-name').innerText = "Hi, " + userData.name;
+            document.getElementById('user-avatar').src = userData.picture;
         }
 
         async function registerBusiness(event) {
@@ -257,25 +297,22 @@
             }
         }
 
-        function showApp(user) {
-            document.getElementById('login-section').classList.add('hidden');
-            document.getElementById('app-section').classList.remove('hidden');
-            
-            document.getElementById('user-name').innerText = user.name;
-            document.getElementById('user-email').innerText = user.email;
-            document.getElementById('user-avatar').src = user.picture;
-        }
-
         function logout() {
             localStorage.removeItem('marketplace_user');
+            localStorage.removeItem('marketplace_temp_user');
             document.getElementById('app-section').classList.add('hidden');
+            document.getElementById('name-section').classList.add('hidden');
             document.getElementById('login-section').classList.remove('hidden');
         }
 
         window.onload = function () {
             const savedUser = localStorage.getItem('marketplace_user');
             if (savedUser) {
-                showApp(JSON.parse(savedUser));
+                const user = JSON.parse(savedUser);
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('app-section').classList.remove('hidden');
+                document.getElementById('user-name').innerText = "Hi, " + user.name;
+                document.getElementById('user-avatar').src = user.picture;
             }
         }
     </script>
