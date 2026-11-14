@@ -503,7 +503,7 @@
             </div>
         </div>
 
-        <!-- Wizard Steps -->
+        <!-- Wizard Steps (11 Steps Questionnaire) -->
         <div id="wizard-section" class="hidden">
             <span id="wizard-badge" class="step-badge">Step 1 of 11</span>
             
@@ -812,7 +812,7 @@
             userDataBuffer.picture = payload.picture;
 
             localStorage.setItem('marketplace_temp_user', JSON.stringify(userDataBuffer));
-            prefetchMarketItems(); // Silent background pre-fetch on login for instant catalog loading
+            prefetchMarketItems(); // Silent background pre-fetch
 
             const savedProfile = localStorage.getItem('profile_' + payload.email);
             if (savedProfile) {
@@ -1057,7 +1057,7 @@
             routeIntentAction(intentName);
         }
 
-        /* --- BACKGROUND SYNC / PRE-FETCH FUNCTION FOR INSTANT LOADING --- */
+        /* --- BACKGROUND SYNC FOR INSTANT LOADING --- */
         async function prefetchMarketItems() {
             try {
                 const res = await fetch('/api/market-items');
@@ -1202,7 +1202,7 @@
                     });
                     const result = await res.json();
                     if (result.success) {
-                        prefetchMarketItems(); // Refresh cache instantly
+                        prefetchMarketItems();
                         alert("✅ Item listed successfully!");
                         showMyItems();
                     }
@@ -1210,8 +1210,8 @@
             }
         }
 
-        /* --- INSTANT LOAD BUYING CATALOG (WITH BACKGROUND SYNC) --- */
-        async function showBuyingCatalog() {
+        /* --- 0-SECOND INSTANT LOAD BUYING CATALOG --- */
+        function showBuyingCatalog() {
             document.getElementById('login-section').classList.add('hidden');
             document.getElementById('wizard-section').classList.add('hidden');
             document.getElementById('sync-section').classList.add('hidden');
@@ -1223,28 +1223,29 @@
 
             const catalogContainer = document.getElementById('catalog-items-container');
 
-            // 1. INSTANT LOAD from local storage cache for zero delay
+            // 1. RENDER INSTANTLY FROM CACHE (0 delay)[span_0](start_span)[span_0](end_span)
             const cachedData = localStorage.getItem('cached_market_items');
             if (cachedData) {
                 try {
                     const items = JSON.parse(cachedData);
                     renderBuyingItems(items, catalogContainer);
-                } catch (e) { console.error(e); }
+                } catch (e) { 
+                    catalogContainer.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 2rem;">Loading items...</div>`;
+                }
             } else {
-                catalogContainer.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 2rem;">Loading items instantly...</div>`;
+                catalogContainer.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 2rem;">Loading items...</div>`;
             }
 
-            // 2. BACKGROUND FETCH to silently sync the latest updates
-            try {
-                const res = await fetch('/api/market-items');
-                const data = await res.json();
-                if (data.success && data.items) {
-                    localStorage.setItem('cached_market_items', JSON.stringify(data.items));
-                    renderBuyingItems(data.items, catalogContainer);
-                }
-            } catch (err) {
-                console.error("Background sync failed:", err);
-            }
+            // 2. BACKGROUND SYNC
+            fetch('/api/market-items')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.items) {
+                        localStorage.setItem('cached_market_items', JSON.stringify(data.items));
+                        renderBuyingItems(data.items, catalogContainer);
+                    }
+                })
+                .catch(err => console.error("Background sync failed:", err));
         }
 
         function renderBuyingItems(items, container) {
@@ -1268,8 +1269,8 @@
             }
         }
 
-        /* --- INSTANT LOAD "YOUR ITEMS" HUB (WITH BACKGROUND SYNC) --- */
-        async function showMyItems() {
+        /* --- 0-SECOND INSTANT LOAD "YOUR ITEMS" HUB --- */
+        function showMyItems() {
             document.getElementById('login-section').classList.add('hidden');
             document.getElementById('wizard-section').classList.add('hidden');
             document.getElementById('sync-section').classList.add('hidden');
@@ -1282,30 +1283,31 @@
             const container = document.getElementById('my-items-container');
             const userEmail = userDataBuffer.email || '';
 
-            // 1. INSTANT LOAD from local cache
+            // 1. RENDER INSTANTLY FROM CACHE (0 delay)[span_1](start_span)[span_1](end_span)
             const cachedData = localStorage.getItem('cached_market_items');
             if (cachedData) {
                 try {
                     const allItems = JSON.parse(cachedData);
                     window.myCachedItems = userEmail === 'dayaandjetalal18@gmail.com' ? allItems : allItems.filter(i => i.seller_email === userEmail);
                     renderMyItems(window.myCachedItems, container);
-                } catch (e) { console.error(e); }
+                } catch (e) {
+                    container.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 2rem;">Loading your items...</div>`;
+                }
             } else {
                 container.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 2rem;">Loading your items...</div>`;
             }
 
-            // 2. BACKGROUND FETCH
-            try {
-                const res = await fetch('/api/market-items');
-                const data = await res.json();
-                if (data.success && data.items) {
-                    localStorage.setItem('cached_market_items', JSON.stringify(data.items));
-                    window.myCachedItems = userEmail === 'dayaandjetalal18@gmail.com' ? data.items : data.items.filter(i => i.seller_email === userEmail);
-                    renderMyItems(window.myCachedItems, container);
-                }
-            } catch (err) {
-                console.error("Background sync failed:", err);
-            }
+            // 2. BACKGROUND SYNC
+            fetch('/api/market-items')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.items) {
+                        localStorage.setItem('cached_market_items', JSON.stringify(data.items));
+                        window.myCachedItems = userEmail === 'dayaandjetalal18@gmail.com' ? data.items : data.items.filter(i => i.seller_email === userEmail);
+                        renderMyItems(window.myCachedItems, container);
+                    }
+                })
+                .catch(err => console.error("Background sync failed:", err));
         }
 
         function renderMyItems(items, container) {
@@ -1511,7 +1513,7 @@
             document.getElementById('user-avatar').src = profile.faceIdUrl || profile.picture || 'https://via.placeholder.com/42';
             document.getElementById('user-intent-badge').innerText = "Intent: " + (profile.intent || '1. Buying');
 
-            prefetchMarketItems(); // Background sync on dashboard load
+            prefetchMarketItems();
         }
 
         async function fetchPublicChats() {}
