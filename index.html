@@ -55,18 +55,38 @@
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid var(--primary);
+            cursor: pointer;
+            transition: transform 0.2s;
         }
+        .topbar-avatar:hover { transform: scale(1.05); }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .notif-btn, .hamburger-btn {
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            cursor: pointer;
+            color: var(--text);
+            padding: 0.25rem 0.4rem;
+            position: relative;
+        }
+        .notif-badge-dot {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 8px;
+            height: 8px;
+            background: #ef4444;
+            border-radius: 50%;
+        }
+
         .hamburger-menu {
             position: relative;
             display: inline-block;
-        }
-        .hamburger-btn {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--text);
-            padding: 0.25rem 0.5rem;
         }
         .dropdown-content {
             display: none;
@@ -108,7 +128,7 @@
         }
         .form-step { text-align: left; margin-bottom: 1rem; }
         .form-step label { font-size: 0.9rem; font-weight: 600; color: #334155; display: block; margin-bottom: 0.3rem; }
-        .form-step input, .form-step select {
+        .form-step input, .form-step select, .form-step textarea {
             width: 100%;
             padding: 0.6rem;
             border: 1px solid #cbd5e1;
@@ -272,6 +292,61 @@
             margin-top: 0.4rem;
             white-space: pre-wrap;
         }
+
+        /* Modal Overlays */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            width: 90%;
+            max-width: 400px;
+            max-height: 85vh;
+            overflow-y: auto;
+            text-align: left;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .modal-card h3 { margin-top: 0; color: #0f172a; }
+        .close-modal-btn {
+            background: #64748b;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            float: right;
+            font-size: 0.8rem;
+        }
+        .notif-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.85rem;
+        }
+        .notif-reactions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .react-btn {
+            background: #e2e8f0;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .react-btn:hover, .react-btn.active { background: #dbeafe; }
     </style>
 </head>
 <body>
@@ -280,7 +355,7 @@
         <h1>All-in-1 Marketplace</h1>
         <p>Shops, Hotels, Rentals, Foods & More</p>
 
-        <!-- Step 1: Google Login (Only required for first-time onboarding) -->
+        <!-- Step 1: Google Login (First-time onboarding) -->
         <div id="login-section" class="hidden">
             <span class="step-badge">Authentication</span>
             <p style="font-size: 0.95rem; font-weight: 500; color: #334155;">Please sign in with your Google account to continue.</p>
@@ -320,7 +395,6 @@
             <h2>What are you here for today?</h2>
             <p style="font-size: 0.85rem; color: #64748b;">Select your primary activity or service requirement.</p>
 
-            <!-- Continue with Past Activity Button -->
             <button type="button" class="past-activity-btn hidden" id="past-activity-btn" onclick="continuePastActivity()">🔄 Continue with Past Activity</button>
 
             <div class="intent-grid">
@@ -343,25 +417,30 @@
 
         <!-- Main Dashboard -->
         <div id="app-section" class="hidden">
-            <!-- Top Header Bar with Left Face ID Avatar and Right Hamburger Menu -->
+            <!-- Top Header Bar with Clickable Avatar, Notification Bell, and Hamburger Menu -->
             <div class="dashboard-topbar">
-                <img id="user-avatar" class="topbar-avatar" src="" alt="Face ID">
+                <img id="user-avatar" class="topbar-avatar" src="" alt="Face ID" onclick="openProfileModal()" title="Click to view & edit details">
                 <div>
                     <h4 id="user-name" style="margin:0; font-size: 0.95rem; color:#0f172a;"></h4>
                     <p id="user-intent-badge" style="margin: 0; font-size: 0.72rem; color: #2563eb; font-weight:600;"></p>
                 </div>
-                <div class="hamburger-menu">
-                    <button class="hamburger-btn" onclick="toggleMenu()">☰</button>
-                    <div id="dropdown-menu" class="dropdown-content">
-                        <a href="#" onclick="switchIntentAgain()">Change Intent</a>
-                        <a href="#" onclick="logout()">Logout</a>
+                <div class="topbar-actions">
+                    <button class="notif-btn" onclick="openNotificationModal()" title="Notifications">
+                        🔔<span id="notif-dot" class="notif-badge-dot"></span>
+                    </button>
+                    <div class="hamburger-menu">
+                        <button class="hamburger-btn" onclick="toggleMenu()">☰</button>
+                        <div id="dropdown-menu" class="dropdown-content">
+                            <a href="#" onclick="switchIntentAgain()">Change Intent</a>
+                            <a href="#" onclick="logout()">Logout</a>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div style="padding: 1.5rem 0; text-align: left;">
                 <h3 style="color: #0f172a; margin-top: 0;">Welcome to your Dashboard</h3>
-                <p style="font-size: 0.9rem; color: #475569;">You are successfully verified. Explore your selected marketplace service or use the menu above to switch activities.</p>
+                <p style="font-size: 0.9rem; color: #475569;">You are successfully verified. Click your profile photo above to review your verified details or request edits.</p>
             </div>
 
             <!-- AI Helping Bot Section at the Bottom -->
@@ -372,6 +451,49 @@
                     <button type="button" onclick="askAiBot()">Enter</button>
                 </div>
                 <div id="ai-response-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFILE MODAL (View & Request Edits to Admin) -->
+    <div id="profile-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <button class="close-modal-btn" onclick="closeProfileModal()">Close</button>
+            <h3>My Verified Profile</h3>
+            <img id="modal-face-thumb" class="review-face-thumb" alt="Face ID">
+            <div class="review-box" id="modal-profile-details"></div>
+
+            <hr style="border:0; border-top:1px solid #cbd5e1; margin: 1rem 0;">
+            <h4 style="margin: 0 0 0.5rem 0; color: #0f172a; font-size: 0.95rem;">Request Detail Changes from Admin</h4>
+            <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.75rem;">Submit changes to <strong style="color: #2563eb;">dayaandjetalal18@gmail.com</strong> for review.</p>
+            
+            <form onsubmit="submitEditRequest(event)">
+                <div class="form-step" style="margin-bottom:0.75rem;">
+                    <label style="font-size: 0.8rem;">What details would you like to update?</label>
+                    <textarea id="edit-request-text" rows="3" required placeholder="e.g., Update my mobile number or sweet name..."></textarea>
+                </div>
+                <button type="submit" class="next-btn" style="padding: 0.5rem; font-size: 0.85rem;">Send Request to Admin</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION MODAL (🔔 with Emoji Reactions) -->
+    <div id="notification-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <button class="close-modal-btn" onclick="closeNotificationModal()">Close</button>
+            <h3>Notifications 🔔</h3>
+            <div id="notifications-list" style="margin-top: 1rem;">
+                <!-- Sample Notification -->
+                <div class="notif-item">
+                    <p style="margin: 0 0 0.4rem 0;"><strong>System Admin:</strong> Welcome to All-in-1 Marketplace! Your profile and Face ID verification are active.</p>
+                    <span style="font-size: 0.75rem; color: #94a3b8;">Today</span>
+                    <div class="notif-reactions" id="react-1">
+                        <button class="react-btn" onclick="reactNotif('1', '👍')">👍</button>
+                        <button class="react-btn" onclick="reactNotif('1', '👎')">👎</button>
+                        <button class="react-btn" onclick="reactNotif('1', '😇')">😇</button>
+                        <button class="react-btn" onclick="reactNotif('1', '😡')">😡</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -775,7 +897,7 @@
         }
 
         window.onclick = function(event) {
-            if (!event.target.matches('.hamburger-btn')) {
+            if (!event.target.matches('.hamburger-btn') && !event.target.matches('.notif-btn')) {
                 const dropdowns = document.getElementsByClassName("dropdown-content");
                 for (let i = 0; i < dropdowns.length; i++) {
                     let openDropdown = dropdowns[i];
@@ -798,6 +920,57 @@
             document.getElementById('user-intent-badge').innerText = "Intent: " + (profile.intent || 'General Marketplace');
         }
 
+        /* Profile Modal Actions */
+        function openProfileModal() {
+            document.getElementById('modal-face-thumb').src = userDataBuffer.faceIdUrl || 'https://via.placeholder.com/70';
+            const detailsBox = document.getElementById('modal-profile-details');
+            detailsBox.innerHTML = `
+                <p><strong>Email:</strong> ${userDataBuffer.email || 'N/A'}</p>
+                <p><strong>Sweet Name:</strong> ${userDataBuffer.sweetName || 'N/A'}</p>
+                <p><strong>Age:</strong> ${userDataBuffer.age || 'N/A'}</p>
+                <p><strong>Marital Status:</strong> ${userDataBuffer.maritalStatus || 'N/A'} ${userDataBuffer.maritalStatus === 'Married' ? '(' + (userDataBuffer.children || 0) + ' children)' : ''}</p>
+                <p><strong>DOB:</strong> ${userDataBuffer.dob || 'N/A'}</p>
+                <p><strong>Religion:</strong> ${userDataBuffer.religion || 'N/A'}</p>
+                <p><strong>Employment:</strong> ${userDataBuffer.employmentStatus || 'N/A'}</p>
+                <p><strong>PAN:</strong> ${userDataBuffer.panNumber || 'N/A'}</p>
+                <p><strong>Mobile:</strong> ${userDataBuffer.mobileNumber || 'N/A'}</p>
+            `;
+            document.getElementById('profile-modal').classList.remove('hidden');
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profile-modal').classList.add('hidden');
+        }
+
+        function submitEditRequest(event) {
+            event.preventDefault();
+            const text = document.getElementById('edit-request-text').value;
+            const subject = encodeURIComponent("Profile Edit Request - " + userDataBuffer.email);
+            const body = encodeURIComponent(`Hello Admin,\n\nI would like to request the following changes to my verified profile:\n\n${text}\n\nUser Email: ${userDataBuffer.email}\nSweet Name: ${userDataBuffer.sweetName}`);
+            
+            window.location.href = `mailto:dayaandjetalal18@gmail.com?subject=${subject}&body=${body}`;
+            closeProfileModal();
+        }
+
+        /* Notification Modal Actions */
+        function openNotificationModal() {
+            document.getElementById('notification-modal').classList.remove('hidden');
+            document.getElementById('notif-dot').classList.add('hidden');
+        }
+
+        function closeNotificationModal() {
+            document.getElementById('notification-modal').classList.add('hidden');
+        }
+
+        function reactNotif(id, emoji) {
+            const container = document.getElementById('react-' + id);
+            container.querySelectorAll('.react-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Optional local acknowledgment
+            console.log(`Reacted to notification ${id} with ${emoji}`);
+        }
+
         function askAiBot() {
             const query = document.getElementById('ai-query-input').value.trim();
             const responseBox = document.getElementById('ai-response-box');
@@ -807,12 +980,12 @@
             }
             
             const q = query.toLowerCase();
-            if (q.includes('intent') || q.includes('change')) {
-                responseBox.innerText = "AI Bot: You can change your marketplace intent anytime by clicking the hamburger menu in the top-right corner and selecting 'Change Intent'.";
-            } else if (q.includes('face') || q.includes('photo')) {
-                responseBox.innerText = "AI Bot: Your Face ID is securely saved both locally and in your Cloudflare D1 database for quick verification.";
+            if (q.includes('edit') || q.includes('change') || q.includes('profile')) {
+                responseBox.innerText = "AI Bot: You can view and edit your profile details anytime by clicking your profile photo in the top-left corner!";
+            } else if (q.includes('notification') || q.includes('bell')) {
+                responseBox.innerText = "AI Bot: Click the bell icon (🔔) in the top-right header to read messages from the admin and react with emojis (👍, 👎, 😇, 😡).";
             } else {
-                responseBox.innerText = `AI Bot: I'm here to help! You asked about "${query}". Feel free to explore our buying, selling, renting, or booking services above!`;
+                responseBox.innerText = `AI Bot: I'm here to help! You asked about "${query}". Feel free to explore our marketplace services above!`;
             }
         }
 
