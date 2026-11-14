@@ -1506,10 +1506,10 @@
             prefetchMarketItems();
             fetchPublicChats();
             if (chatPollInterval) clearInterval(chatPollInterval);
-            chatPollInterval = setInterval(fetchPublicChats, 4000);
+            chatPollInterval = setInterval(fetchPublicChats, 3000);
         }
 
-        /* --- RESTORED PUBLIC COMMUNITY CHAT LOGIC --- */
+        /* --- STABLE PUBLIC COMMUNITY CHAT LOGIC --- */
         async function fetchPublicChats() {
             try {
                 const res = await fetch('/api/public-chats');
