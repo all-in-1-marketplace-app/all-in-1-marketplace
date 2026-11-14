@@ -355,42 +355,6 @@
             object-fit: cover;
         }
 
-        .chat-section {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.75rem;
-            padding: 1.25rem;
-            margin-top: 1.25rem;
-            text-align: left;
-        }
-        .chat-messages-container {
-            height: 200px;
-            overflow-y: auto;
-            border: 1px solid #cbd5e1;
-            border-radius: 0.5rem;
-            padding: 0.75rem;
-            margin-bottom: 0.75rem;
-            background: #f8fafc;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        .chat-bubble {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            padding: 0.5rem 0.75rem;
-            border-radius: 0.5rem;
-            font-size: 0.85rem;
-        }
-        .chat-bubble-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.7rem;
-            color: #64748b;
-            margin-bottom: 0.2rem;
-        }
-        .chat-bubble-user { font-weight: 600; color: var(--primary); }
-
         .ai-bot-bar {
             margin-top: 1.25rem;
             background: #f1f5f9;
@@ -691,33 +655,8 @@
             </div>
 
             <div style="text-align: left; margin-bottom: 0.75rem;">
-                <h3 style="color: #0f172a; margin: 0 0 0.25rem 0; font-size: 1.1rem;">Dashboard & Community Chat</h3>
-                <p style="font-size: 0.85rem; color: #475569; margin: 0;">Verified successfully. Chat with members below or click your avatar for details.</p>
-            </div>
-
-            <div class="chat-section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                    <h4 style="margin: 0; font-size: 0.95rem; color: #0f172a;">💬 Public Community Chat</h4>
-                    <span id="chat-status-badge" style="font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 9999px; background: #dcfce7; color: #166534; font-weight: 600;">Warnings: 0/3</span>
-                </div>
-
-                <div id="chat-messages-container" class="chat-messages-container">
-                    <div style="text-align: center; color: #94a3b8; font-size: 0.8rem; padding: 2rem 0;">Loading community messages...</div>
-                </div>
-
-                <div id="chat-input-wrapper">
-                    <form id="chat-form" onsubmit="sendPublicMessage(event)" style="display: flex; gap: 0.5rem;">
-                        <input type="text" id="chat-input" placeholder="Type a public message..." maxlength="250" required autocomplete="off" style="flex: 1; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.375rem; font-size: 0.85rem;">
-                        <button type="submit" style="background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.375rem; font-weight: 600; cursor: pointer; font-size: 0.85rem;">Send</button>
-                    </form>
-                    <p style="font-size: 0.7rem; color: #64748b; margin: 0.3rem 0 0 0;">⚠️ No profanity or vernacular insults. 3 warnings = permanent chat ban.</p>
-                </div>
-
-                <div id="chat-banned-banner" class="hidden" style="background: #fef2f2; border: 1px solid #fecaca; padding: 0.75rem; border-radius: 0.375rem; text-align: center;">
-                    <p style="font-size: 0.85rem; font-weight: 600; color: #991b1b; margin: 0 0 0.4rem 0;">🚫 Chat Access Permanently Blocked</p>
-                    <p style="font-size: 0.75rem; color: #b91c1c; margin: 0 0 0.5rem 0;">You have accumulated 3 terms violations due to inappropriate language.</p>
-                    <button type="button" onclick="requestChatUnlock()" style="background: #dc2626; color: white; border: none; padding: 0.35rem 0.75rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Request Admin Unlock</button>
-                </div>
+                <h3 style="color: #0f172a; margin: 0 0 0.25rem 0; font-size: 1.1rem;">Dashboard</h3>
+                <p style="font-size: 0.85rem; color: #475569; margin: 0;">Verified successfully. Click your avatar for details or use the menu above.</p>
             </div>
 
             <div class="ai-bot-bar">
@@ -745,7 +684,7 @@
             
             <form onsubmit="submitEditRequest(event)">
                 <div class="form-step" style="margin-bottom:0.75rem;">
-                    <label style="font-size: 0.8rem;">What details would you like to update?</label>
+                    <label style="font-size: 0.80rem;">What details would you like to update?</label>
                     <textarea id="edit-request-text" rows="3" required placeholder="e.g., Update my mobile number or sweet name..."></textarea>
                 </div>
                 <button type="submit" class="next-btn" style="padding: 0.5rem; font-size: 0.85rem;">Send Request to Admin</button>
@@ -779,7 +718,6 @@
         let videoStream = null;
         let countdownTimer = null;
         let selectedUserIntent = '1. Buying';
-        let chatPollInterval = null;
 
         let sellerStep = 1;
         let itemDraft = { title: '', photos: [], price: '', email: '', whatsapp: '' };
@@ -789,13 +727,6 @@
 
         let activePrivateChat = { itemId: null, recipientEmail: null, title: '' };
         let privateChatPollInterval = null;
-
-        const restrictedWords = ["badword1", "badword2", "abuse", "idiot", "fool", "vernacular_insult_placeholder"]; 
-
-        function containsProfanity(text) {
-            const lowerText = text.toLowerCase();
-            return restrictedWords.some(word => lowerText.includes(word));
-        }
 
         function parseJwt(token) {
             var base64Url = token.split('.')[1];
@@ -1504,79 +1435,6 @@
             document.getElementById('user-intent-badge').innerText = "Intent: " + (profile.intent || '1. Buying');
 
             prefetchMarketItems();
-            fetchPublicChats();
-            if (chatPollInterval) clearInterval(chatPollInterval);
-            chatPollInterval = setInterval(fetchPublicChats, 3000);
-        }
-
-        /* --- STABLE PUBLIC COMMUNITY CHAT LOGIC --- */
-        async function fetchPublicChats() {
-            try {
-                const res = await fetch('/api/public-chats');
-                const data = await res.json();
-                const container = document.getElementById('chat-messages-container');
-
-                if (data.success && data.messages && data.messages.length > 0) {
-                    localStorage.setItem('cached_public_chats', JSON.stringify(data.messages));
-                    renderPublicChats(data.messages, container);
-                } else {
-                    const cached = localStorage.getItem('cached_public_chats');
-                    if (cached) {
-                        renderPublicChats(JSON.parse(cached), container);
-                    } else {
-                        container.innerHTML = `<div style="text-align: center; color: #94a3b8; font-size: 0.8rem; padding: 2rem 0;">No community messages yet. Be the first to say hello!</div>`;
-                    }
-                }
-            } catch (e) {
-                const cached = localStorage.getItem('cached_public_chats');
-                if (cached) {
-                    renderPublicChats(JSON.parse(cached), document.getElementById('chat-messages-container'));
-                }
-            }
-        }
-
-        function renderPublicChats(messages, container) {
-            const userEmail = userDataBuffer.email || '';
-            container.innerHTML = messages.map(m => `
-                <div class="chat-bubble" style="background: ${m.sender_email === userEmail ? '#eff6ff' : '#ffffff'};">
-                    <div class="chat-bubble-header">
-                        <span class="chat-bubble-user">${escapeHtml(m.sender_name)}</span>
-                        <span>${new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                    </div>
-                    <div style="color: #1e293b; word-break: break-word;">${escapeHtml(m.message)}</div>
-                </div>
-            `).join('');
-            container.scrollTop = container.scrollHeight;
-        }
-
-        async function sendPublicMessage(e) {
-            e.preventDefault();
-            const input = document.getElementById('chat-input');
-            const msg = input.value.trim();
-            if (!msg) return;
-
-            const payload = {
-                sender_email: userDataBuffer.email || 'anonymous@user.com',
-                sender_name: userDataBuffer.sweetName || 'Community Member',
-                message: msg
-            };
-
-            try {
-                const res = await fetch('/api/public-chats', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const result = await res.json();
-                if (result.success) {
-                    input.value = '';
-                    fetchPublicChats();
-                } else {
-                    alert(result.error || "Failed to send message.");
-                }
-            } catch (err) {
-                console.error("Error sending message:", err);
-            }
         }
 
         function openProfileModal() {
@@ -1595,7 +1453,7 @@
         function openNotificationModal() { document.getElementById('notification-modal').classList.remove('hidden'); document.getElementById('notif-dot').classList.add('hidden'); }
         function closeNotificationModal() { document.getElementById('notification-modal').classList.add('hidden'); }
         function reactNotif(id, emoji) {}
-        function askAiBot() { document.getElementById('ai-response-box').innerText = "AI Bot: I'm here to help you navigate secure messaging & marketplace!"; }
+        function askAiBot() { document.getElementById('ai-response-box').innerText = "AI Bot: I'm here to help you navigate your marketplace dashboard!"; }
         function logout() { localStorage.clear(); location.reload(); }
 
         window.onload = function () {
