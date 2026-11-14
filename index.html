@@ -549,6 +549,20 @@
             <button type="button" class="next-btn" onclick="proceedToDashboard()">Continue to Dashboard</button>
         </div>
 
+        <!-- SELLING CHOICE MODAL -->
+        <div id="selling-choice-modal" class="modal-overlay hidden">
+            <div class="modal-card" style="text-align: center;">
+                <button class="close-modal-btn" onclick="closeSellingChoiceModal()">Close</button>
+                <h3>🏷️ Seller Options</h3>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.25rem;">What would you like to do today?</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <button type="button" class="next-btn" style="margin-top:0;" onclick="chooseListNewItem()">+ List a New Item</button>
+                    <button type="button" class="next-btn" style="background: #0ea5e9; margin-top:0;" onclick="chooseViewMyItems()">📦 View Your Existing Items & Messages</button>
+                </div>
+            </div>
+        </div>
+
         <!-- MARKETPLACE BUYING CATALOG SECTION -->
         <div id="buying-catalog-section" class="hidden">
             <div class="dashboard-topbar">
@@ -594,7 +608,7 @@
             <div id="my-items-container" class="my-items-container"></div>
         </div>
 
-        <!-- PRIVATE CHAT DRAWER MODAL (Buyer <-> Seller <-> Admin) -->
+        <!-- PRIVATE CHAT DRAWER MODAL -->
         <div id="private-chat-modal" class="modal-overlay hidden">
             <div class="modal-card" style="max-width: 500px;">
                 <button class="close-modal-btn" onclick="closePrivateChatModal()">Close</button>
@@ -681,7 +695,6 @@
                 <p style="font-size: 0.85rem; color: #475569; margin: 0;">Verified successfully. Chat with members below or click your avatar for details.</p>
             </div>
 
-            <!-- Public Live Community Chat Section -->
             <div class="chat-section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                     <h4 style="margin: 0; font-size: 0.95rem; color: #0f172a;">💬 Public Community Chat</h4>
@@ -707,7 +720,6 @@
                 </div>
             </div>
 
-            <!-- AI Helping Bot Section -->
             <div class="ai-bot-bar">
                 <label style="font-size: 0.8rem; font-weight: 600; color: #334155;">🤖 AI Helping Bot</label>
                 <div class="ai-bot-input-group">
@@ -775,7 +787,6 @@
         let editingItemId = null;
         let editingItemPhotos = [];
 
-        // Active Private Chat Session State
         let activePrivateChat = { itemId: null, recipientEmail: null, title: '' };
         let privateChatPollInterval = null;
 
@@ -1043,11 +1054,35 @@
             routeIntentAction(intentName);
         }
 
+        /* --- SELLING CHOICE MODAL LOGIC --- */
+        function openSellingChoiceModal() {
+            document.getElementById('selling-choice-modal').classList.remove('hidden');
+        }
+
+        function closeSellingChoiceModal() {
+            document.getElementById('selling-choice-modal').classList.add('hidden');
+        }
+
+        function chooseListNewItem() {
+            closeSellingChoiceModal();
+            startSellingWizard();
+        }
+
+        function chooseViewMyItems() {
+            closeSellingChoiceModal();
+            showMyItems();
+        }
+
         function routeIntentAction(intent) {
-            if (intent.includes('1. Buying')) showBuyingCatalog();
-            else if (intent.includes('2. Selling')) startSellingWizard();
-            else if (intent.includes('2b. Your Items')) showMyItems();
-            else showApp(userDataBuffer);
+            if (intent.includes('1. Buying')) {
+                showBuyingCatalog();
+            } else if (intent.includes('2. Selling') || intent.includes('Selling (General)')) {
+                openSellingChoiceModal(); // Opens choice prompt popup!
+            } else if (intent.includes('2b. Your Items')) {
+                showMyItems();
+            } else {
+                showApp(userDataBuffer);
+            }
         }
 
         /* --- SELLER WIZARD --- */
@@ -1177,7 +1212,6 @@
                 const data = await res.json();
                 const userEmail = userDataBuffer.email || '';
                 
-                // If user is admin (dayaandjetalal18@gmail.com), show all items; otherwise show only theirs
                 window.myCachedItems = (data.success && data.items) ? (userEmail === 'dayaandjetalal18@gmail.com' ? data.items : data.items.filter(i => i.seller_email === userEmail)) : [];
 
                 if (window.myCachedItems.length > 0) {
