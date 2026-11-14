@@ -65,12 +65,15 @@
             align-items: center;
             gap: 0.5rem;
         }
-        .notif-btn, .hamburger-btn {
+        .notif-btn, .hamburger-btn-wrapper {
             background: none;
             border: none;
-            font-size: 1.3rem;
             cursor: pointer;
             color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 1.2rem;
             padding: 0.25rem 0.4rem;
             position: relative;
         }
@@ -93,19 +96,29 @@
             position: absolute;
             right: 0;
             background-color: #ffffff;
-            min-width: 160px;
+            min-width: 220px;
+            max-height: 350px;
+            overflow-y: auto;
             box-shadow: 0px 8px 16px rgba(0,0,0,0.1);
             border-radius: 0.5rem;
             z-index: 10;
             text-align: left;
             border: 1px solid #e2e8f0;
         }
-        .dropdown-content a {
+        .dropdown-content a, .dropdown-content .dropdown-header {
             color: var(--text);
             padding: 10px 14px;
             text-decoration: none;
             display: block;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .dropdown-content .dropdown-header {
+            font-weight: 700;
+            background: #f8fafc;
+            color: #2563eb;
+            font-size: 0.8rem;
+            text-transform: uppercase;
         }
         .dropdown-content a:hover { background-color: #f1f5f9; color: var(--primary); }
         .show-dropdown { display: block; }
@@ -266,7 +279,7 @@
             text-align: left;
         }
         .chat-messages-container {
-            height: 220px;
+            height: 200px;
             overflow-y: auto;
             border: 1px solid #cbd5e1;
             border-radius: 0.5rem;
@@ -292,6 +305,23 @@
             margin-bottom: 0.2rem;
         }
         .chat-bubble-user { font-weight: 600; color: var(--primary); }
+
+        /* Play Games Section Styling */
+        .games-section {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            margin-top: 1.25rem;
+            text-align: left;
+        }
+        .game-card {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
 
         /* AI Helping Bot Bottom Bar */
         .ai-bot-bar {
@@ -435,18 +465,18 @@
             <button type="button" class="past-activity-btn hidden" id="past-activity-btn" onclick="continuePastActivity()">🔄 Continue with Past Activity</button>
 
             <div class="intent-grid">
-                <div class="intent-card" onclick="selectIntent(this, 'Buying')">🛒 Buying (General)</div>
-                <div class="intent-card" onclick="selectIntent(this, 'Selling')">🏷️ Selling (General)</div>
-                <div class="intent-card" onclick="selectIntent(this, 'Renting')">🔑 Renting Service</div>
-                <div class="intent-card" onclick="selectIntent(this, 'Find Job')">💼 Finding a Job</div>
-                <div class="intent-card" onclick="selectIntent(this, 'Apply Job')">📄 Applying for Job</div>
-                <div class="intent-card" onclick="selectIntent(this, 'Job Vacancy')">📢 Post Job Vacancy</div>
-                <div class="intent-card" onclick="selectIntent(this, 'Buy Vehicle')">🏍️ Buy Bike / Scooty / Car</div>
-                <div class="intent-card" onclick="selectIntent(this, 'Sell Vehicle')">🚗 Sell Bike / Scooty / Car</div>
-                <div class="intent-card" onclick="selectIntent(this, 'Flight Ticket')">✈️ Buy Flight Ticket</div>
-                <div class="intent-card" onclick="selectIntent(this, 'Train Ticket')">🚂 Buy Train Ticket</div>
-                <div class="intent-card" onclick="selectIntent(this, 'Book Hotel')">🏨 Booking Hotels / Rooms</div>
-                <div class="intent-card" onclick="selectIntent(this, 'Party Bar')">🎉 Hotel Party & Bar Booking</div>
+                <div class="intent-card" onclick="selectIntent(this, '1. Buying')">1. 🛒 Buying (General)</div>
+                <div class="intent-card" onclick="selectIntent(this, '2. Selling')">2. 🏷️ Selling (General)</div>
+                <div class="intent-card" onclick="selectIntent(this, '3. Renting')">3. 🔑 Renting Service</div>
+                <div class="intent-card" onclick="selectIntent(this, '4. Find Job')">4. 💼 Finding a Job</div>
+                <div class="intent-card" onclick="selectIntent(this, '5. Apply Job')">5. 📄 Applying for Job</div>
+                <div class="intent-card" onclick="selectIntent(this, '6. Job Vacancy')">6. Post Job Vacancy</div>
+                <div class="intent-card" onclick="selectIntent(this, '7. Buy Vehicle')">7. 🏍️ Buy Bike / Scooty / Car</div>
+                <div class="intent-card" onclick="selectIntent(this, '8. Sell Vehicle')">8. 🚗 Sell Bike / Scooty / Car</div>
+                <div class="intent-card" onclick="selectIntent(this, '9. Flight Ticket')">9. ✈️ Buy Flight Ticket</div>
+                <div class="intent-card" onclick="selectIntent(this, '10. Train Ticket')">10. 🚂 Buy Train Ticket</div>
+                <div class="intent-card" onclick="selectIntent(this, '11. Book Hotel')">11. 🏨 Booking Hotels / Rooms</div>
+                <div class="intent-card" onclick="selectIntent(this, '12. Party Bar')">12. 🎉 Hotel Party & Bar Booking</div>
             </div>
 
             <button type="button" class="next-btn" onclick="proceedToDashboard()">Continue to Dashboard</button>
@@ -454,7 +484,7 @@
 
         <!-- Main Dashboard -->
         <div id="app-section" class="hidden">
-            <!-- Top Header Bar with Clickable Avatar, Notification Bell, and Hamburger Menu -->
+            <!-- Top Header Bar with Clickable Avatar, Notification Bell, and Hamburger Menu + Selected Arrow -->
             <div class="dashboard-topbar">
                 <img id="user-avatar" class="topbar-avatar" src="" alt="Face ID" onclick="openProfileModal()" title="Click to view & edit details">
                 <div>
@@ -466,10 +496,25 @@
                         🔔<span id="notif-dot" class="notif-badge-dot"></span>
                     </button>
                     <div class="hamburger-menu">
-                        <button class="hamburger-btn" onclick="toggleMenu()">☰</button>
+                        <button class="hamburger-btn-wrapper" onclick="toggleMenu()">
+                            <span id="hamburger-arrow" style="font-size: 0.75rem; color: #2563eb; font-weight: bold;">▼</span> ☰
+                        </button>
                         <div id="dropdown-menu" class="dropdown-content">
-                            <a href="#" onclick="switchIntentAgain()">Change Intent</a>
-                            <a href="#" onclick="logout()">Logout</a>
+                            <div class="dropdown-header">Marketplace Intents (1-12)</div>
+                            <a href="#" onclick="selectMenuIntent('1. Buying')">1. 🛒 Buying (General)</a>
+                            <a href="#" onclick="selectMenuIntent('2. Selling')">2. 🏷️ Selling (General)</a>
+                            <a href="#" onclick="selectMenuIntent('3. Renting')">3. 🔑 Renting Service</a>
+                            <a href="#" onclick="selectMenuIntent('4. Find Job')">4. 💼 Finding a Job</a>
+                            <a href="#" onclick="selectMenuIntent('5. Apply Job')">5. 📄 Applying for Job</a>
+                            <a href="#" onclick="selectMenuIntent('6. Job Vacancy')">6. Post Job Vacancy</a>
+                            <a href="#" onclick="selectMenuIntent('7. Buy Vehicle')">7. 🏍️ Buy Bike / Scooty / Car</a>
+                            <a href="#" onclick="selectMenuIntent('8. Sell Vehicle')">8. 🚗 Sell Bike / Scooty / Car</a>
+                            <a href="#" onclick="selectMenuIntent('9. Flight Ticket')">9. ✈️ Buy Flight Ticket</a>
+                            <a href="#" onclick="selectMenuIntent('10. Train Ticket')">10. 🚂 Buy Train Ticket</a>
+                            <a href="#" onclick="selectMenuIntent('11. Book Hotel')">11. 🏨 Booking Hotels / Rooms</a>
+                            <a href="#" onclick="selectMenuIntent('12. Party Bar')">12. 🎉 Hotel Party & Bar Booking</a>
+                            <div class="dropdown-header">Account Options</div>
+                            <a href="#" onclick="logout()">🚪 Logout</a>
                         </div>
                     </div>
                 </div>
@@ -506,6 +551,20 @@
                     <p style="font-size: 0.85rem; font-weight: 600; color: #991b1b; margin: 0 0 0.4rem 0;">🚫 Chat Access Permanently Blocked</p>
                     <p style="font-size: 0.75rem; color: #b91c1c; margin: 0 0 0.5rem 0;">You have accumulated 3 terms violations due to inappropriate language.</p>
                     <button type="button" onclick="requestChatUnlock()" style="background: #dc2626; color: white; border: none; padding: 0.35rem 0.75rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Request Admin Unlock</button>
+                </div>
+            </div>
+
+            <!-- Play Games Section -->
+            <div class="games-section">
+                <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; color: #0f172a;">🎮 Play Community Games</h4>
+                <div class="game-card">
+                    <p style="font-weight: 600; font-size: 0.85rem; color: #334155; margin: 0 0 0.4rem 0;">Lucky Number Guess (1 to 10)</p>
+                    <p style="font-size: 0.75rem; color: #64748b; margin: 0 0 0.75rem 0;">Guess the secret number correctly to win marketplace bonus points!</p>
+                    <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                        <input type="number" id="game-guess-input" min="1" max="10" placeholder="Enter 1-10" style="width: 100px; padding: 0.4rem; border: 1px solid #cbd5e1; border-radius: 0.375rem; font-size: 0.85rem; text-align: center;">
+                        <button type="button" onclick="playLuckyGame()" style="background: #10b981; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 0.375rem; font-weight: 600; cursor: pointer; font-size: 0.85rem;">Guess!</button>
+                    </div>
+                    <p id="game-result-text" style="font-size: 0.8rem; font-weight: 600; color: #2563eb; margin: 0.5rem 0 0 0;"></p>
                 </div>
             </div>
 
@@ -568,7 +627,7 @@
         let userDataBuffer = {};
         let videoStream = null;
         let countdownTimer = null;
-        let selectedUserIntent = 'General Marketplace';
+        let selectedUserIntent = '1. Buying';
         let chatPollInterval = null;
 
         // Strict Bad-Word / Profanity / Vernacular Filter List
@@ -960,23 +1019,34 @@
             showApp(userDataBuffer);
         }
 
-        function switchIntentAgain() {
+        function selectMenuIntent(intentName) {
+            selectedUserIntent = intentName;
+            userDataBuffer.intent = selectedUserIntent;
+            localStorage.setItem('profile_' + userDataBuffer.email, JSON.stringify(userDataBuffer));
+            localStorage.setItem('last_intent_' + userDataBuffer.email, selectedUserIntent);
+            document.getElementById('user-intent-badge').innerText = "Intent: " + selectedUserIntent;
             toggleMenu();
-            showIntentSelectionScreen();
         }
 
         function toggleMenu() {
             const menu = document.getElementById('dropdown-menu');
+            const arrow = document.getElementById('hamburger-arrow');
             menu.classList.toggle('show-dropdown');
+            if (menu.classList.contains('show-dropdown')) {
+                arrow.innerText = "▲";
+            } else {
+                arrow.innerText = "▼";
+            }
         }
 
         window.onclick = function(event) {
-            if (!event.target.matches('.hamburger-btn') && !event.target.matches('.notif-btn')) {
+            if (!event.target.closest('.hamburger-menu') && !event.target.matches('.notif-btn')) {
                 const dropdowns = document.getElementsByClassName("dropdown-content");
                 for (let i = 0; i < dropdowns.length; i++) {
                     let openDropdown = dropdowns[i];
                     if (openDropdown.classList.contains('show-dropdown')) {
                         openDropdown.classList.remove('show-dropdown');
+                        document.getElementById('hamburger-arrow').innerText = "▼";
                     }
                 }
             }
@@ -991,12 +1061,36 @@
             
             document.getElementById('user-name').innerText = "Hi, " + (profile.sweetName || 'User');
             document.getElementById('user-avatar').src = profile.faceIdUrl || profile.picture || 'https://via.placeholder.com/42';
-            document.getElementById('user-intent-badge').innerText = "Intent: " + (profile.intent || 'General Marketplace');
+            document.getElementById('user-intent-badge').innerText = "Intent: " + (profile.intent || '1. Buying');
 
             // Start live chat polling
             if (chatPollInterval) clearInterval(chatPollInterval);
             fetchPublicChats();
             chatPollInterval = setInterval(fetchPublicChats, 5000);
+        }
+
+        /* Play Games Logic */
+        function playLuckyGame() {
+            const guessInput = document.getElementById('game-guess-input');
+            const resultBox = document.getElementById('game-result-text');
+            const userGuess = parseInt(guessInput.value);
+
+            if (!userGuess || userGuess < 1 || userGuess > 10) {
+                resultBox.innerText = "⚠️ Please enter a valid number between 1 and 10.";
+                resultBox.style.color = "#d97706";
+                return;
+            }
+
+            // Random winning number between 1 and 10
+            const winningNumber = Math.floor(Math.random() * 10) + 1;
+
+            if (userGuess === winningNumber) {
+                resultBox.innerText = `🎉 Congratulations! You guessed ${userGuess} and won 100 Marketplace Bonus Points!`;
+                resultBox.style.color = "#16a34a";
+            } else {
+                resultBox.innerText = `❌ So close! The winning number was ${winningNumber}. Try again!`;
+                resultBox.style.color = "#dc2626";
+            }
         }
 
         /* Live Public Chat Functions */
@@ -1158,7 +1252,9 @@
             }
             
             const q = query.toLowerCase();
-            if (q.includes('chat') || q.includes('message')) {
+            if (q.includes('game') || q.includes('play')) {
+                responseBox.innerText = "AI Bot: You can play the Lucky Number Guess game in the games section above to win bonus points!";
+            } else if (q.includes('chat') || q.includes('message')) {
                 responseBox.innerText = "AI Bot: You can chat with community members in the Public Community Chat box above. Keep it polite—profanity triggers 3 warnings before a permanent chat ban!";
             } else if (q.includes('edit') || q.includes('change') || q.includes('profile')) {
                 responseBox.innerText = "AI Bot: You can view and edit your profile details anytime by clicking your profile photo in the top-left corner!";
