@@ -1,66 +1,45 @@
 export async function onRequestGet(context) {
-  const { env } = context;
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-  };
+    try {
+        const { env } = context;
+        const { results } = await env.DB.prepare(
+            "SELECT * FROM market_items ORDER BY id DESC"
+        ).all();
 
-  try {
-    // Fetch all items that are still available (not sold)
-    const { results: items } = await env.DB.prepare(
-      "SELECT * FROM marketplace_items WHERE status = 'AVAILABLE' ORDER BY id DESC"
-    ).all();
-
-    return new Response(JSON.stringify({ success: true, items: items || [] }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
-  }
+        return Response.json({ success: true, items: results || [] });
+    } catch (e) {
+        return Response.json({ success: false, error: e.message, items: [] }, { status: 500 });
+    }
 }
 
 export async function onRequestPost(context) {
-  const { request, env } = context;
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-  };
+    try {
+        const { request, env } = context;
+        const body = await request.json();
 
-  try {
-    const body = await request.json();
-    const { seller_email, seller_name, item_title, item_price, item_image } = body;
+        // If updating status or editing item
+        if (body.id && body.status) {
+            await env.DB.prepare(
+                "UPDATE market_items SET status = ?, item_image = ?, all_photos = ? WHERE id = ?"
+            ).bind(body.status, body.item_image, body.all_photos, body.id).run();
+            return Response.json({ success: true });
+        }
 
-    if (!seller_email || !item_title || !item_price) {
-      return new Response(JSON.stringify({ error: "Missing required item details" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
+        // Inserting a new market item
+        await env.DB.prepare(
+            "INSERT INTO market_items (seller_email, seller_name, item_title, item_price, item_image, whatsapp, all_photos, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        ).bind(
+            body.seller_email,
+            body.seller_name,
+            body.item_title,
+            body.item_price,
+            body.item_image,
+            body.whatsapp || '',
+            body.all_photos || '[]',
+            'AVAILABLE'
+        ).run();
+
+        return Response.json({ success: true });
+    } catch (e) {
+        return Response.json({ success: false, error: e.message }, { status: 500 });
     }
-
-    // Insert item into D1 database so it stays permanently until sold
-    await env.DB.prepare(
-      "INSERT INTO marketplace_items (seller_email, seller_name, item_title, item_price, item_image, status) VALUES (?, ?, ?, ?, ?, 'AVAILABLE')"
-    ).bind(seller_email, seller_name || "Seller", item_title, item_price, item_image || "https://via.placeholder.com/150").run();
-
-    return new Response(JSON.stringify({ success: true, message: "Item listed successfully!" }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
-  }
-}
-
-export async function onRequestOptions() {
-  return new Response(null, {
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    }
-  });
 }
