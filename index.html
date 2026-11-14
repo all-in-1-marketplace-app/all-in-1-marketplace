@@ -31,7 +31,7 @@
             border-radius: 1rem;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             width: 100%;
-            max-width: 560px;
+            max-width: 580px;
             text-align: center;
             box-sizing: border-box;
             position: relative;
@@ -285,8 +285,8 @@
         }
         .past-activity-btn:hover { background: #cbd5e1; }
 
-        /* Marketplace Items Catalog Styles */
-        .catalog-container {
+        /* Marketplace Catalogs & Seller Hub */
+        .catalog-container, .my-items-container {
             text-align: left;
             margin-top: 1rem;
         }
@@ -312,8 +312,8 @@
         .item-details { flex: 1; }
         .item-title { font-weight: 700; font-size: 0.95rem; color: #0f172a; margin: 0 0 0.2rem 0; }
         .item-price { font-weight: 700; color: #16a34a; font-size: 0.9rem; margin: 0 0 0.3rem 0; }
-        .item-seller { font-size: 0.78rem; color: #64748b; margin: 0; }
-        .message-seller-btn {
+        .item-seller { font-size: 0.78rem; color: #64748b; margin: 0 0 0.2rem 0; }
+        .action-btn {
             background: var(--primary);
             color: white;
             border: none;
@@ -325,8 +325,28 @@
             text-decoration: none;
             display: inline-block;
             margin-top: 0.4rem;
+            margin-right: 0.4rem;
         }
-        .message-seller-btn:hover { background: #1d4ed8; }
+        .action-btn:hover { background: #1d4ed8; }
+        .whatsapp-btn { background: #16a34a; }
+        .whatsapp-btn:hover { background: #15803d; }
+
+        /* Photo Upload Grid for Seller Wizard */
+        .photo-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .photo-thumb-box {
+            width: 100%;
+            height: 60px;
+            border-radius: 0.3rem;
+            border: 1px solid #cbd5e1;
+            object-fit: cover;
+        }
 
         /* Public Live Community Chat Section Styling */
         .chat-section {
@@ -524,26 +544,46 @@
             <button type="button" class="next-btn" onclick="proceedToDashboard()">Continue to Dashboard</button>
         </div>
 
-        <!-- MAIN BUYING DIRECTORY PAGE (Opens when selecting "1. Buying") -->
+        <!-- MARKETPLACE BUYING CATALOG SECTION -->
         <div id="buying-catalog-section" class="hidden">
             <div class="dashboard-topbar">
                 <button type="button" onclick="showDashboardMain()" style="background:#e2e8f0; border:none; padding:0.4rem 0.8rem; border-radius:0.375rem; font-weight:600; cursor:pointer; font-size:0.8rem;">← Back to Dashboard</button>
                 <h3 style="margin:0; font-size: 1rem; color:#0f172a;">🛒 Marketplace Buying Catalog</h3>
             </div>
-            <p style="font-size: 0.85rem; color: #64748b; text-align: left; margin-bottom: 1rem;">Browse community items below. Tap "Message Seller" to contact sellers directly.</p>
+            <p style="font-size: 0.85rem; color: #64748b; text-align: left; margin-bottom: 1rem;">Browse community items below. Contact sellers via Email or WhatsApp.</p>
             
-            <div id="catalog-items-container" class="catalog-container">
-                <!-- Dynamically loaded catalog items -->
-                <div class="item-card">
-                    <img src="https://via.placeholder.com/80" class="item-thumb" alt="Item">
-                    <div class="item-details">
-                        <p class="item-title">Local Organic Honey (1L)</p>
-                        <p class="item-price">₹450</p>
-                        <p class="item-seller">Seller: Uttam Rai (uttam@marketplace.com)</p>
-                        <a href="mailto:uttam@marketplace.com?subject=Inquiry about Local Organic Honey" class="message-seller-btn">💬 Message Seller</a>
-                    </div>
-                </div>
+            <div id="catalog-items-container" class="catalog-container"></div>
+        </div>
+
+        <!-- MARKETPLACE SELLING WIZARD SECTION -->
+        <div id="selling-wizard-section" class="hidden">
+            <div class="dashboard-topbar">
+                <button type="button" onclick="showDashboardMain()" style="background:#e2e8f0; border:none; padding:0.4rem 0.8rem; border-radius:0.375rem; font-weight:600; cursor:pointer; font-size:0.8rem;">← Back to Dashboard</button>
+                <h3 style="margin:0; font-size: 1rem; color:#0f172a;">🏷️ Seller Onboarding Hub</h3>
             </div>
+            
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.25rem; text-align: left;">
+                <span id="seller-step-badge" class="step-badge">Step 1 of 4: Item Name</span>
+                
+                <form id="seller-form" onsubmit="handleSellerFormStep(event)">
+                    <div id="seller-step-container"></div>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                        <button type="button" id="seller-back-btn" class="hidden" onclick="prevSellerStep()" style="background: #64748b; color: white; border: none; padding: 0.6rem; border-radius: 0.375rem; font-weight: 600; cursor: pointer; width: 30%;">Back</button>
+                        <button type="submit" id="seller-next-btn" class="next-btn" style="flex: 1; margin-top:0;">Next Step</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- "YOUR ITEMS" SELLER LISTINGS SECTION -->
+        <div id="my-items-section" class="hidden">
+            <div class="dashboard-topbar">
+                <button type="button" onclick="showDashboardMain()" style="background:#e2e8f0; border:none; padding:0.4rem 0.8rem; border-radius:0.375rem; font-weight:600; cursor:pointer; font-size:0.8rem;">← Back to Dashboard</button>
+                <h3 style="margin:0; font-size: 1rem; color:#0f172a;">📦 Your Listed Items for Sale</h3>
+            </div>
+            <p style="font-size: 0.85rem; color: #64748b; text-align: left; margin-bottom: 1rem;">Items you have posted stay here permanently until marked as sold.</p>
+            
+            <div id="my-items-container" class="my-items-container"></div>
         </div>
 
         <!-- Main Dashboard -->
@@ -575,6 +615,7 @@
                             <div id="menu-intent-list">
                                 <a href="#" onclick="selectMenuIntent('1. Buying')">1. 🛒 Buying (General)</a>
                                 <a href="#" onclick="selectMenuIntent('2. Selling')">2. 🏷️ Selling (General)</a>
+                                <a href="#" onclick="selectMenuIntent('2b. Your Items')">   📦 Your Items (Selling)</a>
                                 <a href="#" onclick="selectMenuIntent('3. Renting')">3. 🔑 Renting Service</a>
                                 <a href="#" onclick="selectMenuIntent('4. Find Job')">4. 💼 Finding a Job</a>
                                 <a href="#" onclick="selectMenuIntent('5. Apply Job')">5. 📄 Applying for Job</a>
@@ -689,6 +730,16 @@
         let selectedUserIntent = '1. Buying';
         let chatPollInterval = null;
 
+        // Seller Wizard State Buffer
+        let sellerStep = 1;
+        let itemDraft = {
+            title: '',
+            photos: [], // Array for 10 to 15 photos
+            price: '',
+            email: '',
+            whatsapp: ''
+        };
+
         // Strict Bad-Word / Profanity / Vernacular Filter List
         const restrictedWords = ["badword1", "badword2", "abuse", "idiot", "fool", "vernacular_insult_placeholder"]; 
 
@@ -741,6 +792,8 @@
             document.getElementById('wizard-section').classList.add('hidden');
             document.getElementById('sync-section').classList.add('hidden');
             document.getElementById('buying-catalog-section').classList.add('hidden');
+            document.getElementById('selling-wizard-section').classList.add('hidden');
+            document.getElementById('my-items-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('intent-section').classList.remove('hidden');
 
@@ -758,11 +811,7 @@
             const pastIntent = localStorage.getItem('last_intent_' + userDataBuffer.email);
             if (pastIntent) {
                 selectedUserIntent = pastIntent;
-                if (pastIntent.includes('1. Buying')) {
-                    showBuyingCatalog();
-                } else {
-                    proceedToDashboard();
-                }
+                routeIntentAction(pastIntent);
             }
         }
 
@@ -1080,12 +1129,7 @@
             userDataBuffer.intent = selectedUserIntent;
             localStorage.setItem('profile_' + userDataBuffer.email, JSON.stringify(userDataBuffer));
             localStorage.setItem('last_intent_' + userDataBuffer.email, selectedUserIntent);
-            
-            if (selectedUserIntent.includes('1. Buying')) {
-                showBuyingCatalog();
-            } else {
-                showApp(userDataBuffer);
-            }
+            routeIntentAction(selectedUserIntent);
         }
 
         function selectMenuIntent(intentName) {
@@ -1094,56 +1138,273 @@
             localStorage.setItem('profile_' + userDataBuffer.email, JSON.stringify(userDataBuffer));
             localStorage.setItem('last_intent_' + userDataBuffer.email, selectedUserIntent);
             toggleMenu();
+            routeIntentAction(intentName);
+        }
 
-            if (intentName.includes('1. Buying')) {
+        function routeIntentAction(intent) {
+            if (intent.includes('1. Buying')) {
                 showBuyingCatalog();
+            } else if (intent.includes('2. Selling')) {
+                startSellingWizard();
+            } else if (intent.includes('2b. Your Items')) {
+                showMyItems();
             } else {
                 showApp(userDataBuffer);
             }
         }
 
-        function showBuyingCatalog() {
+        /* --- SELLER WIZARD (10-15 Photos, Price, Email & WhatsApp) --- */
+        function startSellingWizard() {
             document.getElementById('login-section').classList.add('hidden');
             document.getElementById('wizard-section').classList.add('hidden');
             document.getElementById('sync-section').classList.add('hidden');
             document.getElementById('intent-section').classList.add('hidden');
+            document.getElementById('buying-catalog-section').classList.add('hidden');
+            document.getElementById('my-items-section').classList.add('hidden');
+            document.getElementById('app-section').classList.add('hidden');
+            document.getElementById('selling-wizard-section').classList.remove('hidden');
+
+            sellerStep = 1;
+            itemDraft = { title: '', photos: [], price: '', email: userDataBuffer.email || '', whatsapp: '' };
+            renderSellerStep();
+        }
+
+        function renderSellerStep() {
+            const container = document.getElementById('seller-step-container');
+            const badge = document.getElementById('seller-step-badge');
+            const backBtn = document.getElementById('seller-back-btn');
+            const nextBtn = document.getElementById('seller-next-btn');
+
+            if (sellerStep > 1) backBtn.classList.remove('hidden');
+            else backBtn.classList.add('hidden');
+
+            container.innerHTML = '';
+
+            if (sellerStep === 1) {
+                badge.innerText = "Step 1 of 4: What do you want to sell?";
+                nextBtn.innerText = "Next: Add Photos";
+                container.innerHTML = `
+                    <div class="form-step">
+                        <label>Item Title & Description</label>
+                        <input type="text" id="draft-title" required placeholder="e.g., Mountain Bicycle, Brand New iPhone" value="${itemDraft.title}">
+                    </div>`;
+            } else if (sellerStep === 2) {
+                badge.innerText = "Step 2 of 4: Item Photos (10 to 15 photos)";
+                nextBtn.innerText = "Next: Set Price";
+                container.innerHTML = `
+                    <div class="form-step">
+                        <label>Upload or Capture Item Photos (Up to 15 photos)</label>
+                        <input type="file" id="draft-file-input" accept="image/*" multiple onchange="handlePhotoUpload(event)" style="margin-bottom:0.5rem;">
+                        <p style="font-size:0.75rem; color:#64748b;">Selected photos: <span id="photo-count">${itemDraft.photos.length}</span> / 15</p>
+                        <div id="photo-preview-grid" class="photo-preview-grid"></div>
+                    </div>`;
+                updatePhotoPreview();
+            } else if (sellerStep === 3) {
+                badge.innerText = "Step 3 of 4: Item Price";
+                nextBtn.innerText = "Next: Contact Details";
+                container.innerHTML = `
+                    <div class="form-step">
+                        <label>Enter Price (₹)</label>
+                        <input type="number" id="draft-price" required placeholder="e.g. 4500" value="${itemDraft.price}">
+                    </div>`;
+            } else if (sellerStep === 4) {
+                badge.innerText = "Step 4 of 4: Mandatory Contact Info";
+                nextBtn.innerText = "💾 Save & List Item Permanently";
+                container.innerHTML = `
+                    <div class="form-step">
+                        <label>Mandatory Email Address</label>
+                        <input type="email" id="draft-email" required placeholder="your.email@gmail.com" value="${itemDraft.email || userDataBuffer.email || ''}">
+                    </div>
+                    <div class="form-step" style="margin-top:0.75rem;">
+                        <label>Mandatory WhatsApp Mobile Number</label>
+                        <input type="tel" id="draft-whatsapp" required maxlength="10" placeholder="10-digit WhatsApp number" value="${itemDraft.whatsapp || ''}">
+                    </div>`;
+            }
+        }
+
+        function handlePhotoUpload(event) {
+            const files = event.target.files;
+            for (let i = 0; i < files.length; i++) {
+                if (itemDraft.photos.length >= 15) {
+                    alert("Maximum limit of 15 photos reached.");
+                    break;
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    itemDraft.photos.push(e.target.result);
+                    updatePhotoPreview();
+                };
+                reader.readAsDataURL(files[i]);
+            }
+        }
+
+        function updatePhotoPreview() {
+            const grid = document.getElementById('photo-preview-grid');
+            const countEl = document.getElementById('photo-count');
+            if (!grid) return;
+            countEl.innerText = itemDraft.photos.length;
+            grid.innerHTML = itemDraft.photos.map(src => `<img src="${src}" class="photo-thumb-box" alt="Item photo">`).join('');
+        }
+
+        function prevSellerStep() {
+            if (sellerStep > 1) {
+                sellerStep--;
+                renderSellerStep();
+            }
+        }
+
+        async function handleSellerFormStep(event) {
+            event.preventDefault();
+
+            if (sellerStep === 1) {
+                itemDraft.title = document.getElementById('draft-title').value.trim();
+                sellerStep++;
+                renderSellerStep();
+            } else if (sellerStep === 2) {
+                if (itemDraft.photos.length === 0) {
+                    alert("Please upload at least 1 photo of your item.");
+                    return;
+                }
+                sellerStep++;
+                renderSellerStep();
+            } else if (sellerStep === 3) {
+                itemDraft.price = document.getElementById('draft-price').value.trim();
+                sellerStep++;
+                renderSellerStep();
+            } else if (sellerStep === 4) {
+                itemDraft.email = document.getElementById('draft-email').value.trim();
+                itemDraft.whatsapp = document.getElementById('draft-whatsapp').value.trim();
+
+                if (!itemDraft.email || !itemDraft.whatsapp) {
+                    alert("Email and WhatsApp number are mandatory!");
+                    return;
+                }
+
+                // Save to Cloudflare D1 Backend & Local Storage
+                const payload = {
+                    seller_email: itemDraft.email,
+                    seller_name: userDataBuffer.sweetName || 'Community Seller',
+                    item_title: itemDraft.title,
+                    item_price: parseFloat(itemDraft.price),
+                    item_image: itemDraft.photos[0] || 'https://via.placeholder.com/150',
+                    whatsapp: itemDraft.whatsapp,
+                    all_photos: JSON.stringify(itemDraft.photos)
+                };
+
+                try {
+                    const res = await fetch('/api/market-items', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await res.json();
+                    
+                    if (result.success) {
+                        // Also save locally for instant offline "Your Items" reflection
+                        let myLocalItems = JSON.parse(localStorage.getItem('my_items_' + userDataBuffer.email) || '[]');
+                        myLocalItems.push(payload);
+                        localStorage.setItem('my_items_' + userDataBuffer.email, JSON.stringify(myLocalItems));
+
+                        alert("✅ Item listed successfully! It is now visible globally to buyers and saved in 'Your Items'.");
+                        showMyItems();
+                    } else {
+                        alert("Error saving item: " + (result.error || 'Unknown error'));
+                    }
+                } catch (err) {
+                    console.error("Backend error:", err);
+                    alert("Network error while saving item to database.");
+                }
+            }
+        }
+
+        /* --- "YOUR ITEMS" LISTINGS VIEW --- */
+        async function showMyItems() {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('wizard-section').classList.add('hidden');
+            document.getElementById('sync-section').classList.add('hidden');
+            document.getElementById('intent-section').classList.add('hidden');
+            document.getElementById('buying-catalog-section').classList.add('hidden');
+            document.getElementById('selling-wizard-section').classList.add('hidden');
+            document.getElementById('app-section').classList.add('hidden');
+            document.getElementById('my-items-section').classList.remove('hidden');
+
+            const container = document.getElementById('my-items-container');
+            container.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 2rem;">Loading your listed items...</div>`;
+
+            try {
+                const res = await fetch('/api/market-items');
+                const data = await res.json();
+
+                const userEmail = userDataBuffer.email || localStorage.getItem('user_email') || '';
+                const myItems = (data.success && data.items) ? data.items.filter(i => i.seller_email === userEmail) : [];
+
+                if (myItems.length > 0) {
+                    container.innerHTML = myItems.map(item => `
+                        <div class="item-card">
+                            <img src="${escapeHtml(item.item_image || 'https://via.placeholder.com/80')}" class="item-thumb" alt="Item">
+                            <div class="item-details">
+                                <p class="item-title">${escapeHtml(item.item_title)}</p>
+                                <p class="item-price">₹${item.item_price}</p>
+                                <p class="item-seller">Status: <strong>${item.status || 'AVAILABLE'}</strong> | WhatsApp: ${escapeHtml(item.whatsapp || 'N/A')}</p>
+                                <span style="font-size: 0.75rem; color: #16a34a; font-weight: 600;">🔒 Stored Permanently in Cloud Backend</span>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 2rem;">You haven't listed any items for sale yet. Select '2. Selling (General)' to post one!</div>`;
+                }
+            } catch (err) {
+                console.error("Error loading user items:", err);
+                container.innerHTML = `<div style="text-align: center; color: #dc2626; padding: 2rem;">Failed to load your items.</div>`;
+            }
+        }
+
+        /* --- BUYING CATALOG VIEW --- */
+        async function showBuyingCatalog() {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('wizard-section').classList.add('hidden');
+            document.getElementById('sync-section').classList.add('hidden');
+            document.getElementById('intent-section').classList.add('hidden');
+            document.getElementById('selling-wizard-section').classList.add('hidden');
+            document.getElementById('my-items-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('buying-catalog-section').classList.remove('hidden');
 
-            // Render mock / live marketplace items
             const catalogContainer = document.getElementById('catalog-items-container');
-            catalogContainer.innerHTML = `
-                <div class="item-card">
-                    <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=150" class="item-thumb" alt="Shoes">
-                    <div class="item-details">
-                        <p class="item-title">Running Sports Sneakers</p>
-                        <p class="item-price">₹1,299</p>
-                        <p class="item-seller">Seller: Alex Dorjee (alex.dorjee@marketplace.com)</p>
-                        <a href="mailto:alex.dorjee@marketplace.com?subject=Inquiry to Buy: Running Sports Sneakers" class="message-seller-btn">💬 Message Seller</a>
-                    </div>
-                </div>
-                <div class="item-card">
-                    <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=150" class="item-thumb" alt="Headphones">
-                    <div class="item-details">
-                        <p class="item-title">Wireless Bluetooth Headphones</p>
-                        <p class="item-price">₹2,499</p>
-                        <p class="item-seller">Seller: Pema Lhamo (pema.lhamo@marketplace.com)</p>
-                        <a href="mailto:pema.lhamo@marketplace.com?subject=Inquiry to Buy: Wireless Bluetooth Headphones" class="message-seller-btn">💬 Message Seller</a>
-                    </div>
-                </div>
-                <div class="item-card">
-                    <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150" class="item-thumb" alt="Watch">
-                    <div class="item-details">
-                        <p class="item-title">Classic Minimalist Watch</p>
-                        <p class="item-price">₹1,850</p>
-                        <p class="item-seller">Seller: Karma Wangchuk (karma.w@marketplace.com)</p>
-                        <a href="mailto:karma.w@marketplace.com?subject=Inquiry to Buy: Classic Minimalist Watch" class="message-seller-btn">💬 Message Seller</a>
-                    </div>
-                </div>`;
+            catalogContainer.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 2rem;">Loading marketplace items...</div>`;
+
+            try {
+                const res = await fetch('/api/market-items');
+                const data = await res.json();
+
+                if (data.success && data.items && data.items.length > 0) {
+                    catalogContainer.innerHTML = data.items.map(item => `
+                        <div class="item-card">
+                            <img src="${escapeHtml(item.item_image || 'https://via.placeholder.com/80')}" class="item-thumb" alt="Item">
+                            <div class="item-details">
+                                <p class="item-title">${escapeHtml(item.item_title)}</p>
+                                <p class="item-price">₹${item.item_price}</p>
+                                <p class="item-seller">Seller: ${escapeHtml(item.seller_name)} (${escapeHtml(item.seller_email)})</p>
+                                <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                                    <a href="mailto:${escapeHtml(item.seller_email)}?subject=Inquiry to Buy: ${encodeURIComponent(item.item_title)}" class="action-btn">💬 Message Email</a>
+                                    ${item.whatsapp ? `<a href="https://wa.me/${item.whatsapp}?text=Hi,%20I%20am%20interested%20in%20buying%20your%20item:%20${encodeURIComponent(item.item_title)}" target="_blank" class="action-btn whatsapp-btn">📞 WhatsApp</a>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    catalogContainer.innerHTML = `<div style="text-align: center; color: #64748b; padding: 2rem;">No items for sale right now. Be the first to list an item!</div>`;
+                }
+            } catch (err) {
+                console.error("Failed to fetch items:", err);
+                catalogContainer.innerHTML = `<div style="text-align: center; color: #dc2626; padding: 2rem;">Failed to load items from database.</div>`;
+            }
         }
 
         function showDashboardMain() {
             document.getElementById('buying-catalog-section').classList.add('hidden');
+            document.getElementById('selling-wizard-section').classList.add('hidden');
+            document.getElementById('my-items-section').classList.add('hidden');
             showApp(userDataBuffer);
         }
 
@@ -1192,13 +1453,14 @@
             document.getElementById('sync-section').classList.add('hidden');
             document.getElementById('intent-section').classList.add('hidden');
             document.getElementById('buying-catalog-section').classList.add('hidden');
+            document.getElementById('selling-wizard-section').classList.add('hidden');
+            document.getElementById('my-items-section').classList.add('hidden');
             document.getElementById('app-section').classList.remove('hidden');
             
             document.getElementById('user-name').innerText = "Hi, " + (profile.sweetName || 'User');
             document.getElementById('user-avatar').src = profile.faceIdUrl || profile.picture || 'https://via.placeholder.com/42';
             document.getElementById('user-intent-badge').innerText = "Intent: " + (profile.intent || '1. Buying');
 
-            // Start live chat polling
             if (chatPollInterval) clearInterval(chatPollInterval);
             fetchPublicChats();
             chatPollInterval = setInterval(fetchPublicChats, 5000);
@@ -1363,8 +1625,8 @@
             }
             
             const q = query.toLowerCase();
-            if (q.includes('buying') || q.includes('buy') || q.includes('item')) {
-                responseBox.innerText = "AI Bot: You can browse items to buy by selecting '1. Buying' from the intent menu or hamburger list!";
+            if (q.includes('selling') || q.includes('sell') || q.includes('item')) {
+                responseBox.innerText = "AI Bot: You can list items for sale by selecting '2. Selling (General)' from the intent menu or hamburger list!";
             } else if (q.includes('chat') || q.includes('message')) {
                 responseBox.innerText = "AI Bot: You can chat with community members in the Public Community Chat box above. Keep it polite—profanity triggers 3 warnings before a permanent chat ban!";
             } else if (q.includes('edit') || q.includes('change') || q.includes('profile')) {
