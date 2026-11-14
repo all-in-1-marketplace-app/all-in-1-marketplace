@@ -984,7 +984,6 @@
                             <p><strong>DOB:</strong> ${userDataBuffer.dob}</p>
                             <p><strong>Religion:</strong> ${userDataBuffer.religion}</p>
                             <p><strong>Employment:</strong> ${userDataBuffer.employmentStatus}</p>
-                            <p><strong>Aadhar:</strong> [Aadhaar Redacted]</p>
                             <p><strong>PAN:</strong> ${userDataBuffer.panNumber}</p>
                             <p><strong>Mobile:</strong> ${userDataBuffer.mobileNumber}</p>
                         </div>
@@ -1367,13 +1366,10 @@
             container.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 2rem;">Loading your listed items...</div>`;
 
             try {
-                // Fetch all items from backend so we can filter seller's items
                 const res = await fetch('/api/market-items');
                 const data = await res.json();
 
                 const userEmail = userDataBuffer.email || localStorage.getItem('user_email') || '';
-                
-                // Also pull from any local storage cache for instant offline rendering
                 window.myCachedItems = (data.success && data.items) ? data.items.filter(i => i.seller_email === userEmail) : [];
 
                 if (window.myCachedItems.length > 0) {
@@ -1434,7 +1430,7 @@
                 });
                 const result = await res.json();
                 if (result.success) {
-                    showMyItems(); // Refresh list
+                    showMyItems();
                 } else {
                     alert("Failed to update status.");
                 }
@@ -1549,7 +1545,6 @@
                 const res = await fetch('/api/market-items');
                 const data = await res.json();
 
-                // Filter only AVAILABLE items for buyers
                 const availableItems = (data.success && data.items) ? data.items.filter(i => (!i.status || i.status === 'AVAILABLE')) : [];
 
                 if (availableItems.length > 0) {
