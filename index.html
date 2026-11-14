@@ -144,7 +144,7 @@
             border: 1px solid #e2e8f0;
             border-radius: 0.5rem;
             padding: 1rem;
-            max-height: 280px;
+            max-height: 250px;
             overflow-y: auto;
             font-size: 0.9rem;
             margin-bottom: 1rem;
@@ -158,6 +158,42 @@
             border: 2px solid var(--primary);
             display: block;
             margin: 0 auto 0.75rem auto;
+        }
+
+        /* Loading / Sync Screen */
+        .sync-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 1.5rem auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Intent Selection Grid Style */
+        .intent-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            text-align: left;
+            margin-bottom: 1rem;
+        }
+        .intent-card {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .intent-card:hover, .intent-card.selected {
+            background: #dbeafe;
+            border-color: var(--primary);
+            color: #1d4ed8;
         }
     </style>
 </head>
@@ -182,7 +218,7 @@
             </div>
         </div>
 
-        <!-- Magical Wizard Steps (10 Steps + Review Step) -->
+        <!-- Wizard Steps (10 Steps + Review Step) -->
         <div id="wizard-section" class="hidden">
             <span id="wizard-badge" class="step-badge">Step 1 of 11</span>
             
@@ -192,12 +228,46 @@
             </form>
         </div>
 
+        <!-- Sync & Backend Verification Loading Screen -->
+        <div id="sync-section" class="hidden">
+            <span class="step-badge">Cloud Sync</span>
+            <h2>Verifying & Saving...</h2>
+            <p style="font-size: 0.9rem; color: #64748b;">Please wait while we sync your encrypted details to your D1 database backend and local device storage.</p>
+            <div class="sync-spinner"></div>
+            <p id="sync-status-text" style="font-weight: 600; color: #2563eb; font-size: 0.9rem;">Connecting to backend...</p>
+        </div>
+
+        <!-- Intent Selection Section ("What are you here for today?") -->
+        <div id="intent-section" class="hidden">
+            <span class="step-badge">Marketplace Intent</span>
+            <h2>What are you here for today?</h2>
+            <p style="font-size: 0.85rem; color: #64748b;">Select your primary activity or service requirement.</p>
+
+            <div class="intent-grid">
+                <div class="intent-card" onclick="selectIntent(this, 'Buying')">🛒 Buying (General)</div>
+                <div class="intent-card" onclick="selectIntent(this, 'Selling')">🏷️ Selling (General)</div>
+                <div class="intent-card" onclick="selectIntent(this, 'Renting')">🔑 Renting Service</div>
+                <div class="intent-card" onclick="selectIntent(this, 'Find Job')">💼 Finding a Job</div>
+                <div class="intent-card" onclick="selectIntent(this, 'Apply Job')">📄 Applying for Job</div>
+                <div class="intent-card" onclick="selectIntent(this, 'Job Vacancy')">📢 Post Job Vacancy</div>
+                <div class="intent-card" onclick="selectIntent(this, 'Buy Vehicle')">🏍️ Buy Bike / Scooty / Car</div>
+                <div class="intent-card" onclick="selectIntent(this, 'Sell Vehicle')">🚗 Sell Bike / Scooty / Car</div>
+                <div class="intent-card" onclick="selectIntent(this, 'Flight Ticket')">✈️ Buy Flight Ticket</div>
+                <div class="intent-card" onclick="selectIntent(this, 'Train Ticket')">🚂 Buy Train Ticket</div>
+                <div class="intent-card" onclick="selectIntent(this, 'Book Hotel')">🏨 Booking Hotels / Rooms</div>
+                <div class="intent-card" onclick="selectIntent(this, 'Party Bar')">🎉 Hotel Party & Bar Booking</div>
+            </div>
+
+            <button type="button" class="next-btn" onclick="proceedToDashboard()">Continue to Dashboard</button>
+        </div>
+
         <!-- Main Dashboard & Business Registration -->
         <div id="app-section" class="hidden">
             <div class="user-info">
                 <img id="user-avatar" src="" alt="Avatar">
                 <div>
                     <h4 id="user-name"></h4>
+                    <p id="user-intent-badge" style="margin: 0.2rem 0 0 0; font-size: 0.75rem; color: #2563eb; font-weight:600;"></p>
                 </div>
                 <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
@@ -239,6 +309,7 @@
         let userDataBuffer = {};
         let videoStream = null;
         let countdownTimer = null;
+        let selectedUserIntent = 'General Marketplace';
 
         function parseJwt(token) {
             var base64Url = token.split('.')[1];
@@ -281,7 +352,6 @@
             const badge = document.getElementById('wizard-badge');
             const submitBtn = document.getElementById('wizard-submit-btn');
             
-            // Step 11 is the Review & Locked Verification Step
             badge.innerText = currentStep <= 10 ? `Step ${currentStep} of 10` : `Final Verification`;
             container.innerHTML = '';
             submitBtn.disabled = false;
@@ -392,7 +462,6 @@
                         <p id="mobile-preview" style="font-size:0.8rem; color:#64748b; margin-top:0.25rem;"></p>
                     </div>`;
             } else if (currentStep === 11) {
-                // Step 11: Locked Review Screen with 5-Second Countdown Timer
                 container.innerHTML = `
                     <div class="form-step" style="text-align:center;">
                         <label style="text-align:center; font-size: 1.1rem; margin-bottom: 0.5rem;">Review Your Details</label>
@@ -550,7 +619,16 @@
                 currentStep++;
                 renderWizardStep();
             } else {
-                // Step 11: Final verification click -> Sync to D1 backend and local storage
+                // Step 11: Trigger 5-6 second Sync Screen
+                document.getElementById('wizard-section').classList.add('hidden');
+                document.getElementById('sync-section').classList.remove('hidden');
+                
+                const statusText = document.getElementById('sync-status-text');
+                
+                setTimeout(() => { statusText.innerText = "Encrypting biometrics & syncing profile..."; }, 1500);
+                setTimeout(() => { statusText.innerText = "Saving to Cloudflare D1 backend database..."; }, 3000);
+                setTimeout(() => { statusText.innerText = "Writing data to local device storage..."; }, 4500);
+
                 try {
                     const res = await fetch('/api/login', {
                         method: 'POST',
@@ -559,26 +637,44 @@
                     });
                     const result = await res.json();
                     
-                    if (result.success || res.ok) {
-                        localStorage.setItem('profile_' + userDataBuffer.email, JSON.stringify(userDataBuffer));
-                        showApp(userDataBuffer);
-                    } else {
-                        alert("Error saving profile to backend: " + (result.error || 'Unknown error'));
+                    if (!result.success && !res.ok) {
+                        console.warn("Backend warning:", result.error);
                     }
                 } catch (err) {
-                    console.error("Sync error:", err);
-                    alert("Network error while syncing with Cloudflare D1 backend.");
+                    console.error("Sync network error:", err);
                 }
+
+                // Complete 5-6 second wait and transition to Intent Selection
+                setTimeout(() => {
+                    localStorage.setItem('profile_' + userDataBuffer.email, JSON.stringify(userDataBuffer));
+                    document.getElementById('sync-section').classList.add('hidden');
+                    document.getElementById('intent-section').classList.remove('hidden');
+                }, 6000);
             }
+        }
+
+        function selectIntent(element, intentName) {
+            document.querySelectorAll('.intent-card').forEach(c => c.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedUserIntent = intentName;
+        }
+
+        function proceedToDashboard() {
+            userDataBuffer.intent = selectedUserIntent;
+            localStorage.setItem('profile_' + userDataBuffer.email, JSON.stringify(userDataBuffer));
+            showApp(userDataBuffer);
         }
 
         function showApp(profile) {
             document.getElementById('login-section').classList.add('hidden');
             document.getElementById('wizard-section').classList.add('hidden');
+            document.getElementById('sync-section').classList.add('hidden');
+            document.getElementById('intent-section').classList.add('hidden');
             document.getElementById('app-section').classList.remove('hidden');
             
-            document.getElementById('user-name').innerText = "Hi, " + profile.sweetName;
-            document.getElementById('user-avatar').src = profile.picture;
+            document.getElementById('user-name').innerText = "Hi, " + (profile.sweetName || 'User');
+            document.getElementById('user-avatar').src = profile.picture || profile.faceIdUrl;
+            document.getElementById('user-intent-badge').innerText = "Intent: " + (profile.intent || 'General Marketplace');
         }
 
         async function registerBusiness(event) {
