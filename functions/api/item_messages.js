@@ -11,11 +11,16 @@ export async function onRequestGet(context) {
   };
 
   try {
+    // AUTOMATIC 1-YEAR EXPIRY CLEANUP:
+    // Deletes any message where created_at is older than 365 days
+    await env.DB.prepare(
+      "DELETE FROM item_messages WHERE created_at < datetime('now', '-365 days')"
+    ).run();
+
     let query = "SELECT * FROM item_messages";
     let params = [];
 
-    // If admin viewing all messages, or user filtering by item / email
-    if (itemId && userEmail) {
+    if (itemId) {
       if (userEmail === 'dayaandjetalal18@gmail.com') {
         query = "SELECT * FROM item_messages WHERE item_id = ? ORDER BY id ASC";
         params = [itemId];
@@ -49,7 +54,7 @@ export async function onRequestPost(context) {
     const { item_id, sender_email, sender_name, recipient_email, message } = body;
 
     if (!item_id || !sender_email || !recipient_email || !message) {
-      return new Response(JSON.stringify({ error: "Missing required message details" }), {
+      return new Response(JSON.stringify({ error: "Missing required details" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
@@ -58,7 +63,7 @@ export async function onRequestPost(context) {
       "INSERT INTO item_messages (item_id, sender_email, sender_name, recipient_email, message) VALUES (?, ?, ?, ?, ?)"
     ).bind(item_id, sender_email, sender_name, recipient_email, message).run();
 
-    return new Response(JSON.stringify({ success: true, message: "Message sent securely!" }), {
+    return new Response(JSON.stringify({ success: true, message: "Sent!" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   } catch (err) {
