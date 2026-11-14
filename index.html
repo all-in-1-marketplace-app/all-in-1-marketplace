@@ -100,6 +100,7 @@
             margin-top: 1rem;
         }
         .next-btn:hover { background: #1d4ed8; }
+        video, canvas { width: 100%; border-radius: 0.5rem; background: #000; margin-top: 0.5rem; }
     </style>
 </head>
 <body>
@@ -123,13 +124,13 @@
             </div>
         </div>
 
-        <!-- Magical Sequential Wizard Steps -->
+        <!-- Magical Sequential Wizard Steps (Expanded to 9 Steps) -->
         <div id="wizard-section" class="hidden">
-            <span id="wizard-badge" class="step-badge">Step 1 of 8</span>
+            <span id="wizard-badge" class="step-badge">Step 1 of 9</span>
             
             <form id="wizard-form" onsubmit="handleWizardStep(event)">
                 <div id="wizard-container"></div>
-                <button type="submit" class="next-btn">Next & Save</button>
+                <button type="submit" id="wizard-submit-btn" class="next-btn">Next & Save</button>
             </form>
         </div>
 
@@ -178,6 +179,7 @@
     <script>
         let currentStep = 1;
         let userDataBuffer = {};
+        let videoStream = null;
 
         function parseJwt(token) {
             var base64Url = token.split('.')[1];
@@ -208,8 +210,14 @@
         function renderWizardStep() {
             const container = document.getElementById('wizard-container');
             const badge = document.getElementById('wizard-badge');
-            badge.innerText = `Step ${currentStep} of 8`;
+            badge.innerText = `Step ${currentStep} of 9`;
             container.innerHTML = '';
+
+            // Stop camera if leaving step 9
+            if (currentStep !== 9 && videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
 
             if (currentStep === 1) {
                 container.innerHTML = `
@@ -236,14 +244,7 @@
                     <div id="children-field" class="form-step hidden" style="margin-top:0.75rem;">
                         <label>How many children?</label>
                         <select id="ans-children">
-                            <option value="0">0</option>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6">6</option>
-                            <option value="7">7</option>
+                            <option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option>
                         </select>
                     </div>`;
             } else if (currentStep === 4) {
@@ -295,25 +296,30 @@
                         <input type="text" id="ans-pan" maxlength="10" required placeholder="Enter 10 chars" oninput="maskPan(this)" style="text-transform:uppercase;">
                         <p id="pan-preview" style="font-size:0.8rem; color:#64748b; margin-top:0.25rem;"></p>
                     </div>`;
+            } else if (currentStep === 9) {
+                container.innerHTML = `
+                    <div class="form-step" style="text-align:center;">
+                        <label>Mandatory Face ID Verification</label>
+                        <p style="font-size:0.8rem; color:#64748b;">Position your face in front of the camera and capture snapshot.</p>
+                        <video id="face-video" autoplay playsinline></video>
+                        <canvas id="face-canvas" class="hidden"></canvas>
+                        <button type="button" onclick="captureFace()" class="submit-btn" style="background:#0ea5e9; margin-top:0.5rem;">Capture Face ID</button>
+                        <img id="face-preview" class="hidden" style="width:100%; border-radius:0.5rem; margin-top:0.5rem;" alt="Captured Face">
+                    </div>`;
+                setTimeout(initCamera, 300);
             }
         }
 
         function checkMarital(val) {
             const childField = document.getElementById('children-field');
-            if (val === 'Married') {
-                childField.classList.remove('hidden');
-            } else {
-                childField.classList.add('hidden');
-            }
+            if (val === 'Married') childField.classList.remove('hidden');
+            else childField.classList.add('hidden');
         }
 
         function checkEmployment(val) {
             const empTypeField = document.getElementById('emp-type-field');
-            if (val === 'Employed') {
-                empTypeField.classList.remove('hidden');
-            } else {
-                empTypeField.classList.add('hidden');
-            }
+            if (val === 'Employed') empTypeField.classList.remove('hidden');
+            else empTypeField.classList.add('hidden');
         }
 
         function maskAadhar(input) {
@@ -331,6 +337,38 @@
                 document.getElementById('pan-preview').innerText = `Preview: ${val.slice(0,3)}XXX${val.slice(6)}`;
             } else {
                 document.getElementById('pan-preview').innerText = `Must be 10 chars (Entered: ${val.length})`;
+            }
+        }
+
+        async function initCamera() {
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                const video = document.getElementById('face-video');
+                if (video) video.srcObject = videoStream;
+            } catch (err) {
+                alert("Camera access denied or unavailable.");
+            }
+        }
+
+        function captureFace() {
+            const video = document.getElementById('face-video');
+            const canvas = document.getElementById('face-canvas');
+            const preview = document.getElementById('face-preview');
+            
+            canvas.width = video.videoWidth || 320;
+            canvas.height = video.videoHeight || 240;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            userDataBuffer.faceIdUrl = dataUrl;
+
+            preview.src = dataUrl;
+            preview.classList.remove('hidden');
+            video.classList.add('hidden');
+
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
             }
         }
 
@@ -357,6 +395,12 @@
                 let raw = document.getElementById('ans-pan').value.toUpperCase();
                 userDataBuffer.panNumber = `${raw.slice(0,3)}XXX${raw.slice(6)}`;
             }
+            if (currentStep === 9) {
+                if (!userDataBuffer.faceIdUrl) {
+                    alert("Please capture your Face ID before proceeding!");
+                    return;
+                }
+            }
 
             // Sync instantly to backend and local storage per step
             try {
@@ -370,7 +414,7 @@
                 console.error("Sync error:", err);
             }
 
-            if (currentStep < 8) {
+            if (currentStep < 9) {
                 currentStep++;
                 renderWizardStep();
             } else {
