@@ -1,45 +1,60 @@
-export async function onRequestGet(context) {
-    try {
-        const { env } = context;
-        const { results } = await env.DB.prepare(
-            "SELECT * FROM market_items ORDER BY id DESC"
-        ).all();
+export async function onRequest(context) {
+  const { request, env } = context;
+  const url = new URL(request.url);
+  const method = request.method;
 
-        return Response.json({ success: true, items: results || [] });
-    } catch (e) {
-        return Response.json({ success: false, error: e.message, items: [] }, { status: 500 });
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
+
+  if (method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    if (method === "GET") {
+      const { results } = await env.DB.prepare("SELECT * FROM market_items ORDER BY id DESC").all();
+      return Response.json({ success: true, items: results }, { headers: corsHeaders });
     }
-}
 
-export async function onRequestPost(context) {
-    try {
-        const { request, env } = context;
-        const body = await request.json();
-
-        // If updating status or editing item
-        if (body.id && body.status) {
-            await env.DB.prepare(
-                "UPDATE market_items SET status = ?, item_image = ?, all_photos = ? WHERE id = ?"
-            ).bind(body.status, body.item_image, body.all_photos, body.id).run();
-            return Response.json({ success: true });
-        }
-
-        // Inserting a new market item
+    if (method === "POST") {
+      const data = await request.json();
+      if (data.id) {
+        // Update existing item / vehicle (status, photos, description)
         await env.DB.prepare(
-            "INSERT INTO market_items (seller_email, seller_name, item_title, item_price, item_image, whatsapp, all_photos, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+          `UPDATE market_items SET item_title = ?, item_price = ?, item_image = ?, all_photos = ?, whatsapp = ?, status = ?, description = ? WHERE id = ?`
         ).bind(
-            body.seller_email,
-            body.seller_name,
-            body.item_title,
-            body.item_price,
-            body.item_image,
-            body.whatsapp || '',
-            body.all_photos || '[]',
-            'AVAILABLE'
+          data.item_title,
+          data.item_price,
+          data.item_image,
+          data.all_photos,
+          data.whatsapp,
+          data.status || 'AVAILABLE',
+          data.description || '',
+          data.id
         ).run();
-
-        return Response.json({ success: true });
-    } catch (e) {
-        return Response.json({ success: false, error: e.message }, { status: 500 });
+      } else {
+        // Insert new item or vehicle listing
+        await env.DB.prepare(
+          `INSERT INTO market_items (seller_email, seller_name, item_title, item_price, item_image, all_photos, whatsapp, status, description, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ).bind(
+          data.seller_email,
+          data.seller_name,
+          data.item_title,
+          data.item_price,
+          data.item_image,
+          data.all_photos,
+          data.whatsapp,
+          data.status || 'AVAILABLE',
+          data.description || '',
+          data.category || 'GENERAL'
+        ).run();
+      }
+      return Response.json({ success: true }, { headers: corsHeaders });
     }
+  } catch (err) {
+    return Response.json({ success: false, error: err.message }, { status: 500, headers: corsHeaders });
+  }
 }
