@@ -355,6 +355,22 @@
             object-fit: cover;
         }
 
+        .chat-bubble {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+        }
+        .chat-bubble-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-bottom: 0.2rem;
+        }
+        .chat-bubble-user { font-weight: 600; color: var(--primary); }
+
         .ai-bot-bar {
             margin-top: 1.25rem;
             background: #f1f5f9;
@@ -497,7 +513,6 @@
             <div class="intent-grid">
                 <div class="intent-card" onclick="selectIntent(this, '1. Buying')">1. 🛒 Buying (General)</div>
                 <div class="intent-card" onclick="selectIntent(this, '2. Selling')">2. 🏷️ Selling (General)</div>
-                <div class="intent-card" onclick="selectIntent(this, '2b. Your Items')">📦 Your Items (Selling)</div>
                 <div class="intent-card" onclick="selectIntent(this, '3. Renting')">3. 🔑 Renting Service</div>
                 <div class="intent-card" onclick="selectIntent(this, '4. Find Job')">4. 💼 Finding a Job</div>
                 <div class="intent-card" onclick="selectIntent(this, '5. Apply Job')">5. 📄 Applying for Job</div>
@@ -635,7 +650,6 @@
                             <div id="menu-intent-list">
                                 <a href="#" onclick="selectMenuIntent('1. Buying')">1. 🛒 Buying (General)</a>
                                 <a href="#" onclick="selectMenuIntent('2. Selling')">2. 🏷️ Selling (General)</a>
-                                <a href="#" onclick="selectMenuIntent('2b. Your Items')">📦 Your Items (Selling)</a>
                                 <a href="#" onclick="selectMenuIntent('3. Renting')">3. 🔑 Renting Service</a>
                                 <a href="#" onclick="selectMenuIntent('4. Find Job')">4. 💼 Finding a Job</a>
                                 <a href="#" onclick="selectMenuIntent('5. Apply Job')">5. 📄 Applying for Job</a>
@@ -1023,8 +1037,6 @@
                 showBuyingCatalog();
             } else if (intent.includes('2. Selling') || intent.includes('Selling (General)')) {
                 openSellingChoiceModal();
-            } else if (intent.includes('2b. Your Items')) {
-                showMyItems();
             } else {
                 showApp(userDataBuffer);
             }
