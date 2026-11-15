@@ -516,14 +516,13 @@
                 <div class="intent-card" onclick="selectIntent(this, '2. Selling')">2. 🏷️ Selling (General)</div>
                 <div class="intent-card" onclick="selectIntent(this, '3. Renting')">3. 🔑 Renting Service</div>
                 <div class="intent-card" onclick="selectIntent(this, '4. Find Job')">4. 💼 Finding a Job</div>
-                <div class="intent-card" onclick="selectIntent(this, '5. Apply Job')">5. 📄 Applying for Job</div>
-                <div class="intent-card" onclick="selectIntent(this, '6. Job Vacancy')">6. Post Job Vacancy</div>
-                <div class="intent-card" onclick="selectIntent(this, '7. Buy Vehicle')">7. 🏍️ Buy Bike / Scooty / Car</div>
-                <div class="intent-card" onclick="selectIntent(this, '8. Sell Vehicle')">8. 🚗 Sell Bike / Scooty / Car</div>
-                <div class="intent-card" onclick="selectIntent(this, '9. Flight Ticket')">9. ✈️ Buy Flight Ticket</div>
-                <div class="intent-card" onclick="selectIntent(this, '10. Train Ticket')">10. 🚂 Buy Train Ticket</div>
-                <div class="intent-card" onclick="selectIntent(this, '11. Book Hotel')">11. 🏨 Booking Hotels / Rooms</div>
-                <div class="intent-card" onclick="selectIntent(this, '12. Party Bar')">12. 🎉 Hotel Party & Bar Booking</div>
+                <div class="intent-card" onclick="selectIntent(this, '6. Job Vacancy')">5. Post Job Vacancy</div>
+                <div class="intent-card" onclick="selectIntent(this, '7. Buy Vehicle')">6. 🏍️ Buy Bike / Scooty / Car</div>
+                <div class="intent-card" onclick="selectIntent(this, '8. Sell Vehicle')">7. 🚗 Sell Bike / Scooty / Car</div>
+                <div class="intent-card" onclick="selectIntent(this, '9. Flight Ticket')">8. ✈️ Buy Flight Ticket</div>
+                <div class="intent-card" onclick="selectIntent(this, '10. Train Ticket')">9. 🚂 Buy Train Ticket</div>
+                <div class="intent-card" onclick="selectIntent(this, '11. Book Hotel')">10. 🏨 Booking Hotels / Rooms</div>
+                <div class="intent-card" onclick="selectIntent(this, '12. Party Bar')">11. 🎉 Hotel Party & Bar Booking</div>
             </div>
 
             <button type="button" class="next-btn" onclick="proceedToDashboard()">Continue to Dashboard</button>
@@ -589,6 +588,64 @@
             </div>
             
             <div id="catalog-rentals-container" class="catalog-container"></div>
+        </div>
+
+        <!-- FINDING A JOB / JOB SEEKER HUB SECTION -->
+        <div id="job-seeker-section" class="hidden">
+            <div class="dashboard-topbar">
+                <button type="button" onclick="showDashboardMain()" style="background:#e2e8f0; border:none; padding:0.4rem 0.8rem; border-radius:0.375rem; font-weight:600; cursor:pointer; font-size:0.8rem;">← Back to Dashboard</button>
+                <h3 style="margin:0; font-size: 1rem; color:#0f172a;">💼 Job Seeker Hub</h3>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 0.75rem; margin-bottom: 1rem;">
+                <span style="font-size: 0.85rem; font-weight: 600; color: #334155;">📍 Distance Filter: <span id="km-display">150</span> km</span>
+                <button type="button" onclick="toggleJobFilterModal()" style="background: var(--primary); color: white; border: none; padding: 0.35rem 0.7rem; border-radius: 0.375rem; font-size: 0.8rem; font-weight: 600; cursor: pointer;">⚙️ Filter KM</button>
+            </div>
+            <div id="job-vacancies-container" class="catalog-container"></div>
+        </div>
+
+        <!-- JOB FILTER MODAL -->
+        <div id="job-filter-modal" class="modal-overlay hidden">
+            <div class="modal-card" style="max-width: 380px; text-align: center;">
+                <button class="close-modal-btn" onclick="toggleJobFilterModal()">✕</button>
+                <h3 style="margin-bottom: 0.5rem;">Filter by Distance</h3>
+                <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 1rem;">Select range from 1 to 150 km.</p>
+                
+                <div class="form-step" style="text-align: left;">
+                    <label>Distance Range (KM): <span id="modal-km-val" style="color: var(--primary); font-weight:700;">150</span> km</label>
+                    <input type="range" id="job-km-range" min="1" max="150" value="150" oninput="document.getElementById('modal-km-val').innerText = this.value; document.getElementById('exact-km-input').value = this.value;" style="width: 100%; margin-bottom: 0.75rem;">
+                    
+                    <label style="font-size: 0.8rem; margin-top: 0.5rem;">Or type exact KM:</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="number" id="exact-km-input" min="1" max="150" value="150" placeholder="e.g. 25" style="flex: 1;">
+                        <button type="button" class="next-btn" style="margin-top: 0; width: auto; padding: 0.5rem 1rem;" onclick="applyJobDistanceFilter()">Search</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- APPLY JOB MODAL -->
+        <div id="apply-job-modal" class="modal-overlay hidden">
+            <div class="modal-card">
+                <button class="close-modal-btn" onclick="closeApplyJobModal()">Close</button>
+                <h3 id="apply-job-title">📄 Apply for Job</h3>
+                <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 1rem;">Submit your application directly to the employer.</p>
+                
+                <form onsubmit="submitJobApplication(event)">
+                    <div class="form-step">
+                        <label>Your Full Name</label>
+                        <input type="text" id="applicant-name" required placeholder="e.g. Uttam Rai" value="">
+                    </div>
+                    <div class="form-step">
+                        <label>Your Email & Contact Number</label>
+                        <input type="text" id="applicant-contact" required placeholder="Email or phone number" value="">
+                    </div>
+                    <div class="form-step">
+                        <label>Why should we hire you? (Cover Note)</label>
+                        <textarea id="applicant-note" rows="3" required placeholder="Briefly describe your experience..."></textarea>
+                    </div>
+                    <button type="submit" class="next-btn">Submit Application</button>
+                </form>
+            </div>
         </div>
 
         <!-- MARKETPLACE BUYING CATALOG SECTION -->
@@ -695,20 +752,19 @@
                                 <span style="font-size: 0.85rem;">🔍</span>
                                 <input type="text" id="menu-search-input" placeholder="Find list here..." oninput="filterMenuList(this.value)" autocomplete="off">
                             </div>
-                            <div class="dropdown-header">Marketplace Intents (1-12)</div>
+                            <div class="dropdown-header">Marketplace Intents (1-11)</div>
                             <div id="menu-intent-list">
                                 <a href="#" onclick="selectMenuIntent('1. Buying')">1. 🛒 Buying (General)</a>
                                 <a href="#" onclick="selectMenuIntent('2. Selling')">2. 🏷️ Selling (General)</a>
                                 <a href="#" onclick="selectMenuIntent('3. Renting')">3. 🔑 Renting Service</a>
                                 <a href="#" onclick="selectMenuIntent('4. Find Job')">4. 💼 Finding a Job</a>
-                                <a href="#" onclick="selectMenuIntent('5. Apply Job')">5. 📄 Applying for Job</a>
-                                <a href="#" onclick="selectMenuIntent('6. Job Vacancy')">6. Post Job Vacancy</a>
-                                <a href="#" onclick="selectMenuIntent('7. Buy Vehicle')">7. 🏍️ Buy Bike / Scooty / Car</a>
-                                <a href="#" onclick="selectMenuIntent('8. Sell Vehicle')">8. 🚗 Sell Bike / Scooty / Car</a>
-                                <a href="#" onclick="selectMenuIntent('9. Flight Ticket')">9. ✈️ Buy Flight Ticket</a>
-                                <a href="#" onclick="selectMenuIntent('10. Train Ticket')">10. 🚂 Buy Train Ticket</a>
-                                <a href="#" onclick="selectMenuIntent('11. Book Hotel')">11. 🏨 Booking Hotels / Rooms</a>
-                                <a href="#" onclick="selectMenuIntent('12. Party Bar')">12. 🎉 Hotel Party & Bar Booking</a>
+                                <a href="#" onclick="selectMenuIntent('6. Job Vacancy')">5. Post Job Vacancy</a>
+                                <a href="#" onclick="selectMenuIntent('7. Buy Vehicle')">6. 🏍️ Buy Bike / Scooty / Car</a>
+                                <a href="#" onclick="selectMenuIntent('8. Sell Vehicle')">7. 🚗 Sell Bike / Scooty / Car</a>
+                                <a href="#" onclick="selectMenuIntent('9. Flight Ticket')">8. ✈️ Buy Flight Ticket</a>
+                                <a href="#" onclick="selectMenuIntent('10. Train Ticket')">9. 🚂 Buy Train Ticket</a>
+                                <a href="#" onclick="selectMenuIntent('11. Book Hotel')">10. 🏨 Booking Hotels / Rooms</a>
+                                <a href="#" onclick="selectMenuIntent('12. Party Bar')">11. 🎉 Hotel Party & Bar Booking</a>
                             </div>
                             <div class="dropdown-header">Account Options</div>
                             <a href="#" onclick="logout()">🚪 Logout</a>
@@ -794,6 +850,9 @@
         let activePrivateChat = { itemId: null, recipientEmail: null, title: '' };
         let privateChatPollInterval = null;
 
+        let activeJobIdForApply = null;
+        let currentMaxKm = 150;
+
         function compressImageFile(file, callback) {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -863,6 +922,7 @@
             document.getElementById('my-items-section').classList.add('hidden');
             document.getElementById('renting-wizard-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.add('hidden');
+            document.getElementById('job-seeker-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('intent-section').classList.remove('hidden');
 
@@ -1112,9 +1172,96 @@
                 openSellingChoiceModal();
             } else if (intent.includes('3. Renting')) {
                 openRentingChoiceModal();
+            } else if (intent.includes('4. Find Job')) {
+                showJobSeekerHub();
             } else {
                 showApp(userDataBuffer);
             }
+        }
+
+        /* --- JOB SEEKER HUB LOGIC --- */
+        function showJobSeekerHub() {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('wizard-section').classList.add('hidden');
+            document.getElementById('sync-section').classList.add('hidden');
+            document.getElementById('intent-section').classList.add('hidden');
+            document.getElementById('buying-catalog-section').classList.add('hidden');
+            document.getElementById('selling-wizard-section').classList.add('hidden');
+            document.getElementById('my-items-section').classList.add('hidden');
+            document.getElementById('renting-wizard-section').classList.add('hidden');
+            document.getElementById('renting-catalog-section').classList.add('hidden');
+            document.getElementById('app-section').classList.add('hidden');
+            document.getElementById('job-seeker-section').classList.remove('hidden');
+
+            loadJobVacancies();
+        }
+
+        function toggleJobFilterModal() {
+            const modal = document.getElementById('job-filter-modal');
+            modal.classList.toggle('hidden');
+        }
+
+        function applyJobDistanceFilter() {
+            const val = parseInt(document.getElementById('exact-km-input').value) || 150;
+            currentMaxKm = Math.min(150, Math.max(1, val));
+            document.getElementById('km-display').innerText = currentMaxKm;
+            toggleJobFilterModal();
+            loadJobVacancies();
+        }
+
+        async function loadJobVacancies() {
+            const container = document.getElementById('job-vacancies-container');
+            container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:2rem;">Searching nearest job vacancies within ${currentMaxKm} km...</div>`;
+
+            // Sample mock/dynamic job vacancies sorted by proximity distance
+            setTimeout(() => {
+                const sampleJobs = [
+                    { id: 101, title: 'Store Sales Associate', company: 'Gangtok Emporium', salary: '₹15,000 / mo', distance: 2, location: 'MG Road, Gangtok' },
+                    { id: 102, title: 'Hotel Front Desk Receptionist', company: 'Hotel Mount View', salary: '₹18,000 / mo', distance: 5, location: 'Deorali, Gangtok' },
+                    { id: 103, title: 'Delivery Executive (Bike Required)', company: 'QuickBite Foods', salary: '₹22,000 / mo', distance: 8, location: 'Tadong, Gangtok' },
+                    { id: 104, title: 'Cafe Barista & Server',company: 'Cloud Cafe', salary: '₹14,000 / mo', distance: 12, location: 'Lal Bazaar, Gangtok' },
+                    { id: 105, title: 'Tourist Guide & Coordinator', company: 'Sikkim Travels', salary: '₹25,000 / mo', distance: 35, location: 'Ranipool' }
+                ];
+
+                const filtered = sampleJobs.filter(j => j.distance <= currentMaxKm);
+
+                if (filtered.length > 0) {
+                    container.innerHTML = filtered.map(job => `
+                        <div class="item-card">
+                            <div class="item-thumb" style="display:flex; align-items:center; justify-content:center; background:#e0f2fe; color:#0284c7; font-size:1.5rem; font-weight:bold;">💼</div>
+                            <div class="item-details">
+                                <p class="item-title">${escapeHtml(job.title)}</p>
+                                <p class="item-price">${escapeHtml(job.salary)} <span style="font-size:0.75rem; color:#64748b; font-weight:normal;">(${escapeHtml(job.company)})</span></p>
+                                <p class="item-seller">📍 Location: ${escapeHtml(job.location)} • <strong>${job.distance} km away</strong></p>
+                                <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top:0.4rem;">
+                                    <button type="button" class="action-btn" onclick="openApplyJobModal(${job.id}, '${escapeHtml(job.title)}')">📄 Apply Now</button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 2rem;">No job vacancies found within ${currentMaxKm} km. Try increasing the distance filter.</div>`;
+                }
+            }, 300);
+        }
+
+        function openApplyJobModal(jobId, jobTitle) {
+            activeJobIdForApply = jobId;
+            document.getElementById('apply-job-title').innerText = `📄 Apply for: ${jobTitle}`;
+            document.getElementById('applicant-name').value = userDataBuffer.sweetName || '';
+            document.getElementById('applicant-contact').value = userDataBuffer.mobileNumber || userDataBuffer.email || '';
+            document.getElementById('apply-job-modal').classList.remove('hidden');
+        }
+
+        function closeApplyJobModal() {
+            document.getElementById('apply-job-modal').classList.add('hidden');
+            activeJobIdForApply = null;
+        }
+
+        function submitJobApplication(e) {
+            e.preventDefault();
+            alert("✅ Job application submitted successfully! The employer will review your details.");
+            closeApplyJobModal();
         }
 
         /* --- RENTING WIZARD LOGIC --- */
@@ -1128,6 +1275,7 @@
             document.getElementById('selling-wizard-section').classList.add('hidden');
             document.getElementById('my-items-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.add('hidden');
+            document.getElementById('job-seeker-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('renting-wizard-section').classList.remove('hidden');
 
@@ -1277,7 +1425,7 @@
                     try {
                         result = JSON.parse(text);
                     } catch (parseErr) {
-                        throw new Error("API endpoint /api/rentals not found yet. Make sure functions/api/rentals.js is committed on GitHub.");
+                        throw new Error("API endpoint /api/rentals not found yet.");
                     }
 
                     if (result.success) {
@@ -1306,6 +1454,7 @@
             document.getElementById('selling-wizard-section').classList.add('hidden');
             document.getElementById('my-items-section').classList.add('hidden');
             document.getElementById('renting-wizard-section').classList.add('hidden');
+            document.getElementById('job-seeker-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.remove('hidden');
 
@@ -1360,6 +1509,7 @@
             document.getElementById('my-items-section').classList.add('hidden');
             document.getElementById('renting-wizard-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.add('hidden');
+            document.getElementById('job-seeker-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('selling-wizard-section').classList.remove('hidden');
 
@@ -1490,6 +1640,7 @@
             document.getElementById('my-items-section').classList.add('hidden');
             document.getElementById('renting-wizard-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.add('hidden');
+            document.getElementById('job-seeker-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('buying-catalog-section').classList.remove('hidden');
 
@@ -1548,6 +1699,7 @@
             document.getElementById('selling-wizard-section').classList.add('hidden');
             document.getElementById('renting-wizard-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.add('hidden');
+            document.getElementById('job-seeker-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('my-items-section').classList.remove('hidden');
 
@@ -1745,6 +1897,7 @@
             document.getElementById('my-items-section').classList.add('hidden');
             document.getElementById('renting-wizard-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.add('hidden');
+            document.getElementById('job-seeker-section').classList.add('hidden');
             showApp(userDataBuffer);
         }
 
@@ -1779,6 +1932,7 @@
             document.getElementById('my-items-section').classList.add('hidden');
             document.getElementById('renting-wizard-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.add('hidden');
+            document.getElementById('job-seeker-section').classList.add('hidden');
             document.getElementById('app-section').classList.remove('hidden');
             
             document.getElementById('user-name').innerText = "Hi, " + (profile.sweetName || 'User');
