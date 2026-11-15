@@ -323,6 +323,90 @@
             margin-right: 0.4rem;
         }
         .action-btn:hover { background: #1d4ed8; }
+        .sold-badge {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        .available-badge {
+            background: #dcfce7;
+            color: #166534;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .photo-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .photo-thumb-box {
+            width: 100%;
+            height: 60px;
+            border-radius: 0.3rem;
+            border: 1px solid #cbd5e1;
+            object-fit: cover;
+        }
+
+        .chat-bubble {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+        }
+        .chat-bubble-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-bottom: 0.2rem;
+        }
+        .chat-bubble-user { font-weight: 600; color: var(--primary); }
+
+        .ai-bot-bar {
+            margin-top: 1.25rem;
+            background: #f1f5f9;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e1;
+            text-align: left;
+        }
+        .ai-bot-input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .ai-bot-input-group input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.375rem;
+            font-size: 0.85rem;
+        }
+        .ai-bot-input-group button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 0.8rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        #ai-response-box {
+            font-size: 0.8rem;
+            color: #475569;
+            margin-top: 0.4rem;
+            white-space: pre-wrap;
+        }
 
         .modal-overlay {
             position: fixed;
@@ -355,21 +439,28 @@
             float: right;
             font-size: 0.8rem;
         }
-        .chat-bubble {
-            background: #ffffff;
+        .notif-item {
+            background: #f8fafc;
             border: 1px solid #e2e8f0;
-            padding: 0.5rem 0.75rem;
+            padding: 0.75rem;
             border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
             font-size: 0.85rem;
         }
-        .chat-bubble-header {
+        .notif-reactions {
             display: flex;
-            justify-content: space-between;
-            font-size: 0.7rem;
-            color: #64748b;
-            margin-bottom: 0.2rem;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
         }
-        .chat-bubble-user { font-weight: 600; color: var(--primary); }
+        .react-btn {
+            background: #e2e8f0;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .react-btn:hover, .react-btn.active { background: #dbeafe; }
     </style>
 </head>
 <body>
@@ -403,12 +494,13 @@
             </form>
         </div>
 
-        <!-- Cloud Sync Loading -->
+        <!-- Sync & Backend Verification Loading Screen -->
         <div id="sync-section" class="hidden">
             <span class="step-badge">Cloud Sync</span>
             <h2>Verifying & Saving...</h2>
-            <p style="font-size: 0.9rem; color: #64748b;">Please wait while we sync your details.</p>
+            <p style="font-size: 0.9rem; color: #64748b;">Please wait while we sync your encrypted details to your D1 database backend and local device storage.</p>
             <div class="sync-spinner"></div>
+            <p id="sync-status-text" style="font-weight: 600; color: #2563eb; font-size: 0.9rem;">Connecting to backend...</p>
         </div>
 
         <!-- Intent Selection Section -->
@@ -434,6 +526,68 @@
             </div>
 
             <button type="button" class="next-btn" onclick="proceedToDashboard()">Continue to Dashboard</button>
+        </div>
+
+        <!-- SELLING CHOICE MODAL -->
+        <div id="selling-choice-modal" class="modal-overlay hidden">
+            <div class="modal-card" style="text-align: center;">
+                <button class="close-modal-btn" onclick="closeSellingChoiceModal()">Close</button>
+                <h3>🏷️ Seller Options</h3>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.25rem;">What would you like to do today?</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <button type="button" class="next-btn" style="margin-top:0;" onclick="chooseListNewItem()">+ List a New Item</button>
+                    <button type="button" class="next-btn" style="background: #0ea5e9; margin-top:0;" onclick="chooseViewMyItems()">📦 View Your Existing Items & Messages</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RENTING CHOICE MODAL -->
+        <div id="renting-choice-modal" class="modal-overlay hidden">
+            <div class="modal-card" style="text-align: center;">
+                <button class="close-modal-btn" onclick="closeRentingChoiceModal()">Close</button>
+                <h3>🔑 Renting Hub</h3>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.25rem;">What would you like to do with rentals today?</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <button type="button" class="next-btn" style="margin-top:0;" onclick="startRentingWizard()">+ List a Rental</button>
+                    <button type="button" class="next-btn" style="background: #0ea5e9; margin-top:0;" onclick="showRentingCatalog()">🔑 Browse Rental Listings</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RENTING LISTING WIZARD -->
+        <div id="renting-wizard-section" class="hidden">
+            <div class="dashboard-topbar">
+                <button type="button" onclick="showDashboardMain()" style="background:#e2e8f0; border:none; padding:0.4rem 0.8rem; border-radius:0.375rem; font-weight:600; cursor:pointer; font-size:0.8rem;">← Back to Dashboard</button>
+                <h3 style="margin:0; font-size: 1rem; color:#0f172a;">🔑 List Your Rental</h3>
+            </div>
+            
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.25rem; text-align: left;">
+                <span id="rental-step-badge" class="step-badge">Step 1 of 5: Rental Type</span>
+                
+                <form id="rental-form" onsubmit="handleRentalFormStep(event)">
+                    <div id="rental-step-container"></div>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                        <button type="button" id="rental-back-btn" class="hidden" onclick="prevRentalStep()" style="background: #64748b; color: white; border: none; padding: 0.6rem; border-radius: 0.375rem; font-weight: 600; cursor: pointer; width: 30%;">Back</button>
+                        <button type="submit" id="rental-next-btn" class="next-btn" style="flex: 1; margin-top:0;">Next Step</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- RENTING CATALOG SECTION -->
+        <div id="renting-catalog-section" class="hidden">
+            <div class="dashboard-topbar">
+                <button type="button" onclick="showDashboardMain()" style="background:#e2e8f0; border:none; padding:0.4rem 0.8rem; border-radius:0.375rem; font-weight:600; cursor:pointer; font-size:0.8rem;">← Back to Dashboard</button>
+                <h3 style="margin:0; font-size: 1rem; color:#0f172a;">🔑 Rental Listings Catalog</h3>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <p style="font-size: 0.85rem; color: #64748b; margin: 0;">Browse rooms, properties, and vehicles available for rent.</p>
+                <button type="button" onclick="startRentingWizard()" style="background:#16a34a; color:white; border:none; padding:0.4rem 0.8rem; border-radius:0.375rem; font-weight:600; cursor:pointer; font-size:0.8rem;">+ List Rental</button>
+            </div>
+            
+            <div id="catalog-rentals-container" class="catalog-container"></div>
         </div>
 
         <!-- FINDING A JOB / JOB SEEKER HUB SECTION -->
@@ -514,12 +668,57 @@
             </div>
         </div>
 
+        <!-- MARKETPLACE BUYING CATALOG SECTION -->
+        <div id="buying-catalog-section" class="hidden">
+            <div class="dashboard-topbar">
+                <button type="button" onclick="showDashboardMain()" style="background:#e2e8f0; border:none; padding:0.4rem 0.8rem; border-radius:0.375rem; font-weight:600; cursor:pointer; font-size:0.8rem;">← Back to Dashboard</button>
+                <h3 style="margin:0; font-size: 1rem; color:#0f172a;">🛒 Marketplace Buying Catalog</h3>
+            </div>
+            <p style="font-size: 0.85rem; color: #64748b; text-align: left; margin-bottom: 1rem;">Browse community items below. Message sellers privately to negotiate.</p>
+            
+            <div id="catalog-items-container" class="catalog-container"></div>
+        </div>
+
+        <!-- MARKETPLACE SELLING WIZARD SECTION -->
+        <div id="selling-wizard-section" class="hidden">
+            <div class="dashboard-topbar">
+                <button type="button" onclick="showDashboardMain()" style="background:#e2e8f0; border:none; padding:0.4rem 0.8rem; border-radius:0.375rem; font-weight:600; cursor:pointer; font-size:0.8rem;">← Back to Dashboard</button>
+                <h3 style="margin:0; font-size: 1rem; color:#0f172a;">🏷️ Seller Onboarding Hub</h3>
+            </div>
+            
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.25rem; text-align: left;">
+                <span id="seller-step-badge" class="step-badge">Step 1 of 4: Item Name</span>
+                
+                <form id="seller-form" onsubmit="handleSellerFormStep(event)">
+                    <div id="seller-step-container"></div>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                        <button type="button" id="seller-back-btn" class="hidden" onclick="prevSellerStep()" style="background: #64748b; color: white; border: none; padding: 0.6rem; border-radius: 0.375rem; font-weight: 600; cursor: pointer; width: 30%;">Back</button>
+                        <button type="submit" id="seller-next-btn" class="next-btn" style="flex: 1; margin-top:0;">Next Step</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- "YOUR ITEMS" & SOLD HISTORY MANAGEMENT SECTION -->
+        <div id="my-items-section" class="hidden">
+            <div class="dashboard-topbar">
+                <button type="button" onclick="showDashboardMain()" style="background:#e2e8f0; border:none; padding:0.4rem 0.8rem; border-radius:0.375rem; font-weight:600; cursor:pointer; font-size:0.8rem;">← Back to Dashboard</button>
+                <h3 style="margin:0; font-size: 1rem; color:#0f172a;">📦 Your Listed & Sold Items</h3>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <p style="font-size: 0.85rem; color: #64748b; margin: 0;">Manage your items, check private buyer messages, or list new ones.</p>
+                <button type="button" onclick="startSellingWizard()" style="background:#16a34a; color:white; border:none; padding:0.4rem 0.8rem; border-radius:0.375rem; font-weight:600; cursor:pointer; font-size:0.8rem;">+ Sell New Item</button>
+            </div>
+            
+            <div id="my-items-container" class="my-items-container"></div>
+        </div>
+
         <!-- PRIVATE CHAT DRAWER MODAL -->
         <div id="private-chat-modal" class="modal-overlay hidden">
             <div class="modal-card" style="max-width: 500px;">
                 <button class="close-modal-btn" onclick="closePrivateChatModal()">Close</button>
                 <h3 id="private-chat-title">💬 Private Negotiation</h3>
-                <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.75rem;">🔒 Secure direct conversation between job seeker and employer.</p>
+                <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.75rem;">🔒 Secure direct conversation between user and owner/employer.</p>
                 
                 <div id="private-messages-feed" style="height: 250px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0.75rem; margin-bottom: 0.75rem; background: #f8fafc; display: flex; flex-direction: column; gap: 0.5rem;">
                     <div style="text-align: center; color: #94a3b8; font-size: 0.8rem; padding: 2rem 0;">Loading secure messages...</div>
@@ -532,15 +731,36 @@
             </div>
         </div>
 
+        <!-- EDIT PHOTOS MODAL -->
+        <div id="edit-photos-modal" class="modal-overlay hidden">
+            <div class="modal-card">
+                <button class="close-modal-btn" onclick="closeEditPhotosModal()">Close</button>
+                <h3>Edit Item Photos</h3>
+                <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 1rem;">Upload or modify photos (up to 15). Changes instantly update in the cloud backend.</p>
+                
+                <div class="form-step">
+                    <label>Add / Replace Photos</label>
+                    <input type="file" id="edit-file-input" accept="image/*" multiple onchange="handleEditPhotoUpload(event)" style="margin-bottom:0.5rem;">
+                    <p style="font-size:0.75rem; color:#64748b;">Total Photos: <span id="edit-photo-count">0</span> / 15</p>
+                    <div id="edit-photo-preview-grid" class="photo-preview-grid"></div>
+                </div>
+
+                <button type="button" class="next-btn" onclick="saveEditedPhotos()">💾 Save & Auto-Sync to Cloud</button>
+            </div>
+        </div>
+
         <!-- Main Dashboard -->
         <div id="app-section" class="hidden">
             <div class="dashboard-topbar">
-                <img id="user-avatar" class="topbar-avatar" src="" alt="Face ID" onclick="openProfileModal()">
+                <img id="user-avatar" class="topbar-avatar" src="" alt="Face ID" onclick="openProfileModal()" title="Click to view & edit details">
                 <div>
                     <h4 id="user-name" style="margin:0; font-size: 0.95rem; color:#0f172a;"></h4>
                     <p id="user-intent-badge" style="margin: 0; font-size: 0.72rem; color: #2563eb; font-weight:600;"></p>
                 </div>
                 <div class="topbar-actions">
+                    <button class="notif-btn" onclick="openNotificationModal()" title="Notifications">
+                        🔔<span id="notif-dot" class="notif-badge-dot"></span>
+                    </button>
                     <div class="hamburger-menu">
                         <button class="hamburger-btn-wrapper" onclick="toggleMenu()" title="Find anything">
                             <span style="font-size: 0.75rem; color: #2563eb; font-weight: bold;">🔍</span>
@@ -548,6 +768,10 @@
                             <span id="hamburger-arrow" style="font-size: 0.65rem; color: #2563eb; font-weight: bold;">▼</span> ☰
                         </button>
                         <div id="dropdown-menu" class="dropdown-content">
+                            <div class="dropdown-search-box">
+                                <span style="font-size: 0.85rem;">🔍</span>
+                                <input type="text" id="menu-search-input" placeholder="Find list here..." oninput="filterMenuList(this.value)" autocomplete="off">
+                            </div>
                             <div class="dropdown-header">Marketplace Intents</div>
                             <div id="menu-intent-list">
                                 <a href="#" onclick="selectMenuIntent('1. Buying')">1. 🛒 Buying (General)</a>
@@ -555,6 +779,12 @@
                                 <a href="#" onclick="selectMenuIntent('3. Renting')">3. 🔑 Renting Service</a>
                                 <a href="#" onclick="selectMenuIntent('4. Find Job')">4. 💼 Finding a Job</a>
                                 <a href="#" onclick="selectMenuIntent('6. Job Vacancy')">5. Post Job Vacancy</a>
+                                <a href="#" onclick="selectMenuIntent('7. Buy Vehicle')">6. 🏍️ Buy Bike / Scooty / Car</a>
+                                <a href="#" onclick="selectMenuIntent('8. Sell Vehicle')">7. 🚗 Sell Bike / Scooty / Car</a>
+                                <a href="#" onclick="selectMenuIntent('9. Flight Ticket')">8. ✈️ Buy Flight Ticket</a>
+                                <a href="#" onclick="selectMenuIntent('10. Train Ticket')">9. 🚂 Buy Train Ticket</a>
+                                <a href="#" onclick="selectMenuIntent('11. Book Hotel')">10. 🏨 Booking Hotels / Rooms</a>
+                                <a href="#" onclick="selectMenuIntent('12. Party Bar')">11. 🎉 Hotel Party & Bar Booking</a>
                             </div>
                             <div class="dropdown-header">Account Options</div>
                             <a href="#" onclick="logout()">🚪 Logout</a>
@@ -562,9 +792,19 @@
                     </div>
                 </div>
             </div>
+
             <div style="text-align: left; margin-bottom: 0.75rem;">
                 <h3 style="color: #0f172a; margin: 0 0 0.25rem 0; font-size: 1.1rem;">Dashboard</h3>
-                <p style="font-size: 0.85rem; color: #475569; margin: 0;">Verified successfully. Use the menu above to switch activities.</p>
+                <p style="font-size: 0.85rem; color: #475569; margin: 0;">Verified successfully. Click your avatar for details or use the menu above.</p>
+            </div>
+
+            <div class="ai-bot-bar">
+                <label style="font-size: 0.8rem; font-weight: 600; color: #334155;">🤖 AI Helping Bot</label>
+                <div class="ai-bot-input-group">
+                    <input type="text" id="ai-query-input" placeholder="Ask AI if you don't understand...">
+                    <button type="button" onclick="askAiBot()">Enter</button>
+                </div>
+                <div id="ai-response-box"></div>
             </div>
         </div>
     </div>
@@ -576,17 +816,62 @@
             <h3>My Verified Profile</h3>
             <img id="modal-face-thumb" class="review-face-thumb" alt="Face ID">
             <div class="review-box" id="modal-profile-details"></div>
+
+            <hr style="border:0; border-top:1px solid #cbd5e1; margin: 1rem 0;">
+            <h4 style="margin: 0 0 0.5rem 0; color: #0f172a; font-size: 0.95rem;">Request Detail Changes from Admin</h4>
+            <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.75rem;">Submit changes to <strong style="color: #2563eb;">dayaandjetalal18@gmail.com</strong> for review.</p>
+            
+            <form onsubmit="submitEditRequest(event)">
+                <div class="form-step" style="margin-bottom:0.75rem;">
+                    <label style="font-size: 0.80rem;">What details would you like to update?</label>
+                    <textarea id="edit-request-text" rows="3" required placeholder="e.g., Update my mobile number or sweet name..."></textarea>
+                </div>
+                <button type="submit" class="next-btn" style="padding: 0.5rem; font-size: 0.85rem;">Send Request to Admin</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION MODAL -->
+    <div id="notification-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <button class="close-modal-btn" onclick="closeNotificationModal()">Close</button>
+            <h3>Notifications 🔔</h3>
+            <div id="notifications-list" style="margin-top: 1rem;">
+                <div class="notif-item">
+                    <p style="margin: 0 0 0.4rem 0;"><strong>System Admin:</strong> Welcome to All-in-1 Marketplace! Your profile and Face ID verification are active.</p>
+                    <span style="font-size: 0.75rem; color: #94a3b8;">Today</span>
+                    <div class="notif-reactions" id="react-1">
+                        <button class="react-btn" onclick="reactNotif('1', '👍')">👍</button>
+                        <button class="react-btn" onclick="reactNotif('1', '👎')">👎</button>
+                        <button class="react-btn" onclick="reactNotif('1', '😇')">😇</button>
+                        <button class="react-btn" onclick="reactNotif('1', '😡')">😡</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         let currentStep = 1;
         let userDataBuffer = {};
+        let videoStream = null;
+        let countdownTimer = null;
         let selectedUserIntent = '1. Buying';
-        let currentMaxKm = 150;
-        let activeJobIdForApply = null;
+
+        let sellerStep = 1;
+        let itemDraft = { title: '', photos: [], price: '', email: '', whatsapp: '' };
+
+        let rentalStep = 1;
+        let rentalDraft = { type: 'Room', subType: '', title: '', photos: [], price: '', location: '', email: '' };
+
+        let editingItemId = null;
+        let editingItemPhotos = [];
+
         let activePrivateChat = { itemId: null, recipientEmail: null, title: '' };
         let privateChatPollInterval = null;
+
+        let activeJobIdForApply = null;
+        let currentMaxKm = 150;
 
         // Post Job Wizard State
         let postJobStep = 1;
@@ -612,6 +897,25 @@
             udyam: ''
         };
 
+        function compressImageFile(file, callback) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const maxW = 800;
+                    const scale = Math.min(1, maxW / img.width);
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    callback(canvas.toDataURL('image/jpeg', 0.7));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
         function parseJwt(token) {
             var base64Url = token.split('.')[1];
             var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -627,11 +931,26 @@
             userDataBuffer.picture = payload.picture;
 
             localStorage.setItem('marketplace_temp_user', JSON.stringify(userDataBuffer));
+            prefetchMarketItems(); 
+            prefetchRentals();
+
             const savedProfile = localStorage.getItem('profile_' + payload.email);
             if (savedProfile) {
-                userDataBuffer = { ...JSON.parse(savedProfile), picture: payload.picture };
+                const parsed = JSON.parse(savedProfile);
+                userDataBuffer = { ...parsed, picture: payload.picture || parsed.picture };
                 showIntentSelectionScreen();
             } else {
+                try {
+                    const res = await fetch('/api/login?email=' + encodeURIComponent(payload.email));
+                    const data = await res.json();
+                    if (data.exists && data.profile) {
+                        userDataBuffer = { ...data.profile, picture: payload.picture || data.profile.picture };
+                        localStorage.setItem('profile_' + payload.email, JSON.stringify(userDataBuffer));
+                        showIntentSelectionScreen();
+                        return;
+                    }
+                } catch(e) { console.error(e); }
+
                 document.getElementById('login-section').classList.add('hidden');
                 document.getElementById('wizard-section').classList.remove('hidden');
                 renderWizardStep();
@@ -642,26 +961,203 @@
             document.getElementById('login-section').classList.add('hidden');
             document.getElementById('wizard-section').classList.add('hidden');
             document.getElementById('sync-section').classList.add('hidden');
+            document.getElementById('buying-catalog-section').classList.add('hidden');
+            document.getElementById('selling-wizard-section').classList.add('hidden');
+            document.getElementById('my-items-section').classList.add('hidden');
+            document.getElementById('renting-wizard-section').classList.add('hidden');
+            document.getElementById('renting-catalog-section').classList.add('hidden');
             document.getElementById('job-seeker-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('intent-section').classList.remove('hidden');
+
+            prefetchMarketItems();
+            prefetchRentals();
+
+            const pastIntent = localStorage.getItem('last_intent_' + userDataBuffer.email);
+            const pastBtn = document.getElementById('past-activity-btn');
+            if (pastIntent) {
+                pastBtn.classList.remove('hidden');
+                pastBtn.innerText = `🔄 Continue with Past Activity (${pastIntent})`;
+            } else {
+                pastBtn.classList.add('hidden');
+            }
+        }
+
+        function continuePastActivity() {
+            const pastIntent = localStorage.getItem('last_intent_' + userDataBuffer.email);
+            if (pastIntent) {
+                selectedUserIntent = pastIntent;
+                routeIntentAction(pastIntent);
+            }
         }
 
         function renderWizardStep() {
             const container = document.getElementById('wizard-container');
             const badge = document.getElementById('wizard-badge');
-            badge.innerText = `Step ${currentStep} of 11`;
-            container.innerHTML = `<div class="form-step"><label>Enter your Sweet Name</label><input type="text" id="ans-sweetName" required value="${userDataBuffer.sweetName || ''}"></div>`;
+            const submitBtn = document.getElementById('wizard-submit-btn');
+            
+            badge.innerText = currentStep <= 10 ? `Step ${currentStep} of 10` : `Final Verification`;
+            container.innerHTML = '';
+            submitBtn.disabled = false;
+            submitBtn.innerText = currentStep === 11 ? "Verify & Complete" : "Next";
+
+            if (currentStep !== 9 && videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+
+            if (currentStep === 1) {
+                container.innerHTML = `<div class="form-step"><label>Hi, please enter your SWEET NAME (Max 30 chars)</label><input type="text" id="ans-sweetName" maxlength="30" required placeholder="Your sweet name..." value="${userDataBuffer.sweetName || ''}"></div>`;
+            } else if (currentStep === 2) {
+                container.innerHTML = `<div class="form-step"><label>Please enter your Age</label><input type="number" id="ans-age" required placeholder="e.g. 25" value="${userDataBuffer.age || ''}"></div>`;
+            } else if (currentStep === 3) {
+                container.innerHTML = `
+                    <div class="form-step"><label>Marital Status</label><select id="ans-maritalStatus" onchange="checkMarital(this.value)"><option value="Single" ${userDataBuffer.maritalStatus === 'Single' ? 'selected' : ''}>Single</option><option value="Married" ${userDataBuffer.maritalStatus === 'Married' ? 'selected' : ''}>Married</option><option value="Divorced" ${userDataBuffer.maritalStatus === 'Divorced' ? 'selected' : ''}>Divorced</option></select></div>
+                    <div id="children-field" class="form-step ${userDataBuffer.maritalStatus === 'Married' ? '' : 'hidden'}" style="margin-top:0.75rem;"><label>How many children?</label><select id="ans-children"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>`;
+            } else if (currentStep === 4) {
+                container.innerHTML = `<div class="form-step"><label>Date of Birth (DOB)</label><input type="date" id="ans-dob" required value="${userDataBuffer.dob || ''}"></div>`;
+            } else if (currentStep === 5) {
+                container.innerHTML = `<div class="form-step"><label>Religion</label><select id="ans-religion"><option value="Christian">Christian</option><option value="Hindu">Hindu</option><option value="Muslim">Muslim</option><option value="Buddhist">Buddhist</option></select></div>`;
+            } else if (currentStep === 6) {
+                container.innerHTML = `
+                    <div class="form-step"><label>Employment Status</label><select id="ans-employmentStatus" onchange="checkEmployment(this.value)"><option value="Employed">Employed</option><option value="Unemployed">Unemployed</option><option value="Self-Employed">Self-Employed</option></select></div>
+                    <div id="emp-type-field" class="form-step hidden" style="margin-top:0.75rem;"><label>Employment Type</label><select id="ans-empType"><option value="Full-time">Full-time</option><option value="Part-time">Part-time</option></select></div>`;
+            } else if (currentStep === 7) {
+                container.innerHTML = `<div class="form-step"><label>12-Digit Aadhar Number</label><input type="text" id="ans-aadhar" maxlength="12" required placeholder="Enter 12 digits" oninput="maskAadhar(this)"><p id="aadhar-preview" style="font-size:0.8rem; color:#64748b; margin-top:0.25rem;"></p></div>`;
+            } else if (currentStep === 8) {
+                container.innerHTML = `<div class="form-step"><label>10-Character PAN Card Number</label><input type="text" id="ans-pan" maxlength="10" required placeholder="Enter 10 chars" oninput="maskPan(this)" style="text-transform:uppercase;"><p id="pan-preview" style="font-size:0.8rem; color:#64748b; margin-top:0.25rem;"></p></div>`;
+            } else if (currentStep === 9) {
+                container.innerHTML = `<div class="form-step" style="text-align:center;"><label style="text-align:center;">Mandatory Face ID Verification</label><p style="font-size:0.8rem; color:#64748b;">Position your face inside the circle</p><div class="face-container"><div class="face-circle"><video id="face-video" autoplay playsinline></video><img id="face-preview" class="${userDataBuffer.faceIdUrl ? '' : 'hidden'}" src="${userDataBuffer.faceIdUrl || ''}" alt="Captured Face"></div><canvas id="face-canvas" class="hidden"></canvas><button type="button" onclick="captureFace()" class="capture-ring-btn">Capture Face</button></div></div>`;
+                if (!userDataBuffer.faceIdUrl) setTimeout(initCamera, 300);
+            } else if (currentStep === 10) {
+                container.innerHTML = `<div class="form-step"><label>10-Digit Mobile Number</label><input type="tel" id="ans-mobile" maxlength="10" required placeholder="Enter 10 digits" oninput="maskMobile(this)"><p id="mobile-preview" style="font-size:0.8rem; color:#64748b; margin-top:0.25rem;"></p></div>`;
+            } else if (currentStep === 11) {
+                container.innerHTML = `
+                    <div class="form-step" style="text-align:center;">
+                        <label style="text-align:center; font-size: 1.1rem; margin-bottom: 0.5rem;">Review Your Details</label>
+                        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1rem;">Please check your submitted information and captured photo below.</p>
+                        <img src="${userDataBuffer.faceIdUrl}" class="review-face-thumb" alt="Face ID">
+                        <div class="review-box">
+                            <p><strong>Sweet Name:</strong> ${userDataBuffer.sweetName}</p>
+                            <p><strong>Age:</strong> ${userDataBuffer.age}</p>
+                            <p><strong>Marital Status:</strong> ${userDataBuffer.maritalStatus}</p>
+                            <p><strong>DOB:</strong> ${userDataBuffer.dob}</p>
+                            <p><strong>Religion:</strong> ${userDataBuffer.religion}</p>
+                            <p><strong>Employment:</strong> ${userDataBuffer.employmentStatus}</p>
+                            <p><strong>Mobile:</strong> ${userDataBuffer.mobileNumber}</p>
+                        </div>
+                        <p id="countdown-text" style="font-weight: 600; color: #d97706; font-size: 0.9rem; margin-top: 0.5rem;">Please review. Button unlocks in 5 seconds...</p>
+                    </div>`;
+                startLockoutTimer();
+            }
+        }
+
+        function startLockoutTimer() {
+            const submitBtn = document.getElementById('wizard-submit-btn');
+            const countdownEl = document.getElementById('countdown-text');
+            let timeLeft = 5;
+            submitBtn.disabled = true;
+            if (countdownTimer) clearInterval(countdownTimer);
+            countdownTimer = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    countdownEl.innerText = `Please review. Button unlocks in ${timeLeft} seconds...`;
+                } else {
+                    clearInterval(countdownTimer);
+                    countdownEl.innerText = "You can now verify and complete your registration!";
+                    countdownEl.style.color = "#16a34a";
+                    submitBtn.disabled = false;
+                }
+            }, 1000);
+        }
+
+        function checkMarital(val) {
+            const childField = document.getElementById('children-field');
+            if (val === 'Married') childField.classList.remove('hidden');
+            else childField.classList.add('hidden');
+        }
+
+        function checkEmployment(val) {
+            const empTypeField = document.getElementById('emp-type-field');
+            if (val === 'Employed') empTypeField.classList.remove('hidden');
+            else empTypeField.classList.add('hidden');
+        }
+
+        function maskAadhar(input) {
+            let val = input.value.replace(/\D/g, '');
+            if (val.length === 12) document.getElementById('aadhar-preview').innerText = `Preview: XXXX-XXXX-${val.slice(8)}`;
+        }
+        function maskPan(input) {
+            let val = input.value.toUpperCase();
+            if (val.length === 10) document.getElementById('pan-preview').innerText = `Preview: ${val.slice(0,3)}XXX${val.slice(6)}`;
+        }
+        function maskMobile(input) {
+            let val = input.value.replace(/\D/g, '');
+            if (val.length === 10) document.getElementById('mobile-preview').innerText = `Preview: XXXXXX${val.slice(6)}`;
+        }
+
+        async function initCamera() {
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                const video = document.getElementById('face-video');
+                if (video) video.srcObject = videoStream;
+            } catch (err) { alert("Camera access denied or unavailable."); }
+        }
+
+        function captureFace() {
+            const video = document.getElementById('face-video');
+            const canvas = document.getElementById('face-canvas');
+            const preview = document.getElementById('face-preview');
+            canvas.width = video.videoWidth || 320;
+            canvas.height = video.videoHeight || 320;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            userDataBuffer.faceIdUrl = canvas.toDataURL('image/jpeg', 0.8);
+            preview.src = userDataBuffer.faceIdUrl;
+            preview.classList.remove('hidden');
+            if (video) video.classList.add('hidden');
+            if (videoStream) videoStream.getTracks().forEach(track => track.stop());
         }
 
         async function handleWizardStep(event) {
             event.preventDefault();
-            userDataBuffer.sweetName = document.getElementById('ans-sweetName').value;
-            userDataBuffer.mobileNumber = 'XXXXXX9999';
-            userDataBuffer.faceIdUrl = userDataBuffer.picture || 'https://via.placeholder.com/70';
-            localStorage.setItem('profile_' + userDataBuffer.email, JSON.stringify(userDataBuffer));
-            showIntentSelectionScreen();
+            if (currentStep === 1) userDataBuffer.sweetName = document.getElementById('ans-sweetName').value;
+            if (currentStep === 2) userDataBuffer.age = document.getElementById('ans-age').value;
+            if (currentStep === 3) {
+                userDataBuffer.maritalStatus = document.getElementById('ans-maritalStatus').value;
+                userDataBuffer.children = userDataBuffer.maritalStatus === 'Married' ? document.getElementById('ans-children').value : '0';
+            }
+            if (currentStep === 4) userDataBuffer.dob = document.getElementById('ans-dob').value;
+            if (currentStep === 5) userDataBuffer.religion = document.getElementById('ans-religion').value;
+            if (currentStep === 6) {
+                userDataBuffer.employmentStatus = document.getElementById('ans-employmentStatus').value;
+                userDataBuffer.empType = userDataBuffer.employmentStatus === 'Employed' ? document.getElementById('ans-empType').value : 'N/A';
+            }
+            if (currentStep === 7) userDataBuffer.aadharNumber = `XXXX-XXXX-${document.getElementById('ans-aadhar').value.slice(8)}`;
+            if (currentStep === 8) userDataBuffer.panNumber = document.getElementById('ans-pan').value.toUpperCase();
+            if (currentStep === 9 && !userDataBuffer.faceIdUrl) { alert("Please capture your Face ID!"); return; }
+            if (currentStep === 10) userDataBuffer.mobileNumber = `XXXXXX${document.getElementById('ans-mobile').value.slice(6)}`;
+
+            if (currentStep < 11) {
+                currentStep++;
+                renderWizardStep();
+            } else {
+                document.getElementById('wizard-section').classList.add('hidden');
+                document.getElementById('sync-section').classList.remove('hidden');
+                try {
+                    await fetch('/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(userDataBuffer)
+                    });
+                } catch (err) { console.error(err); }
+                setTimeout(() => {
+                    localStorage.setItem('profile_' + userDataBuffer.email, JSON.stringify(userDataBuffer));
+                    document.getElementById('sync-section').classList.add('hidden');
+                    showIntentSelectionScreen();
+                }, 4000);
+            }
         }
 
         function selectIntent(element, intentName) {
@@ -673,18 +1169,55 @@
         function proceedToDashboard() {
             userDataBuffer.intent = selectedUserIntent;
             localStorage.setItem('profile_' + userDataBuffer.email, JSON.stringify(userDataBuffer));
+            localStorage.setItem('last_intent_' + userDataBuffer.email, selectedUserIntent);
             routeIntentAction(selectedUserIntent);
         }
 
         function selectMenuIntent(intentName) {
             selectedUserIntent = intentName;
             userDataBuffer.intent = selectedUserIntent;
+            localStorage.setItem('profile_' + userDataBuffer.email, JSON.stringify(userDataBuffer));
+            localStorage.setItem('last_intent_' + userDataBuffer.email, selectedUserIntent);
             toggleMenu();
             routeIntentAction(intentName);
         }
 
+        async function prefetchMarketItems() {
+            try {
+                const res = await fetch('/api/market-items');
+                const data = await res.json();
+                if (data.success && data.items) {
+                    localStorage.setItem('cached_market_items', JSON.stringify(data.items));
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function prefetchRentals() {
+            try {
+                const res = await fetch('/api/rentals');
+                const data = await res.json();
+                if (data.success && data.items) {
+                    localStorage.setItem('cached_rentals', JSON.stringify(data.items));
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function openSellingChoiceModal() { document.getElementById('selling-choice-modal').classList.remove('hidden'); }
+        function closeSellingChoiceModal() { document.getElementById('selling-choice-modal').classList.add('hidden'); }
+        function chooseListNewItem() { closeSellingChoiceModal(); startSellingWizard(); }
+        function chooseViewMyItems() { closeSellingChoiceModal(); showMyItems(); }
+
+        function openRentingChoiceModal() { document.getElementById('renting-choice-modal').classList.remove('hidden'); }
+        function closeRentingChoiceModal() { document.getElementById('renting-choice-modal').classList.add('hidden'); }
+
         function routeIntentAction(intent) {
-            if (intent.includes('4. Find Job')) {
+            if (intent.includes('1. Buying')) {
+                showBuyingCatalog();
+            } else if (intent.includes('2. Selling') || intent.includes('Selling (General)')) {
+                openSellingChoiceModal();
+            } else if (intent.includes('3. Renting')) {
+                openRentingChoiceModal();
+            } else if (intent.includes('4. Find Job')) {
                 showJobSeekerHub();
             } else if (intent.includes('6. Job Vacancy')) {
                 startPostJobWizard();
@@ -697,6 +1230,12 @@
         function startPostJobWizard() {
             document.getElementById('intent-section').classList.add('hidden');
             document.getElementById('job-seeker-section').classList.add('hidden');
+            document.getElementById('buying-catalog-section').classList.add('hidden');
+            document.getElementById('selling-wizard-section').classList.add('hidden');
+            document.getElementById('my-items-section').classList.add('hidden');
+            document.getElementById('renting-wizard-section').classList.add('hidden');
+            document.getElementById('renting-catalog-section').classList.add('hidden');
+            document.getElementById('app-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.remove('hidden');
             postJobStep = 1;
             renderPostJobStep();
@@ -756,16 +1295,16 @@
                 container.innerHTML = `
                     <div class="form-step"><label>Minimum Schooling Required</label>
                         <select id="pj-schooling" onchange="toggleCustomSchooling(this.value)">
-                            <option value="1-8 Pass">1-8 Pass</option>
-                            <option value="9th">9th</option>
-                            <option value="10th" selected>10th</option>
-                            <option value="11th">11th</option>
-                            <option value="12th">12th</option>
-                            <option value="College">College</option>
-                            <option value="Other Higher Studies">Other Higher Studies</option>
+                            <option value="1-8 Pass" ${postJobDraft.schooling==='1-8 Pass'?'selected':''}>1-8 Pass</option>
+                            <option value="9th" ${postJobDraft.schooling==='9th'?'selected':''}>9th</option>
+                            <option value="10th" ${postJobDraft.schooling==='10th'?'selected':''}>10th</option>
+                            <option value="11th" ${postJobDraft.schooling==='11th'?'selected':''}>11th</option>
+                            <option value="12th" ${postJobDraft.schooling==='12th'?'selected':''}>12th</option>
+                            <option value="College" ${postJobDraft.schooling==='College'?'selected':''}>College</option>
+                            <option value="Other Higher Studies" ${postJobDraft.schooling==='Other Higher Studies'?'selected':''}>Other Higher Studies</option>
                         </select>
                     </div>
-                    <div id="custom-schooling-box" class="form-step hidden" style="margin-top:0.75rem;">
+                    <div id="custom-schooling-box" class="form-step ${postJobDraft.schooling==='Other Higher Studies'?'':'hidden'}" style="margin-top:0.75rem;">
                         <label>Specify Schooling / Education</label><input type="text" id="pj-custom-school" placeholder="e.g. Diploma in Culinary" value="${postJobDraft.customSchooling}">
                     </div>`;
             } else if (postJobStep === 8) {
@@ -901,10 +1440,15 @@
             }
         }
 
-        /* --- JOB SEEKER HUB --- */
+        /* --- REAL JOB SEEKER HUB --- */
         function showJobSeekerHub() {
             document.getElementById('intent-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
+            document.getElementById('buying-catalog-section').classList.add('hidden');
+            document.getElementById('selling-wizard-section').classList.add('hidden');
+            document.getElementById('my-items-section').classList.add('hidden');
+            document.getElementById('renting-wizard-section').classList.add('hidden');
+            document.getElementById('renting-catalog-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('job-seeker-section').classList.remove('hidden');
             loadRealJobVacancies();
@@ -941,7 +1485,7 @@
                                 <p style="font-size: 0.8rem; color: #475569; margin: 0.2rem 0;">${escapeHtml(job.description || '')}</p>
                                 <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top:0.4rem;">
                                     <button type="button" class="action-btn" onclick="openApplyJobModal(${job.id}, '${escapeHtml(job.title)}')">📄 Apply Now</button>
-                                    <button type="button" class="action-btn" style="background:#0ea5e9;" onclick="openPrivateChat(${job.id}, '${escapeHtml(job.employer_email)}', '${escapeHtml(job.title)}')">💬 Message Owner</button>
+                                    <button type="button" class="action-btn" style="background:#0ea5e9;" onclick="openPrivateChat(${job.id}, '${escapeHtml(job.employer_email)}', '${escapeHtml(job.title)}')">💬 Message Employer</button>
                                 </div>
                             </div>
                         </div>
@@ -996,7 +1540,500 @@
             }
         }
 
-        /* --- PRIVATE CHAT --- */
+        /* --- RENTING WIZARD LOGIC --- */
+        function startRentingWizard() {
+            closeRentingChoiceModal();
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('wizard-section').classList.add('hidden');
+            document.getElementById('sync-section').classList.add('hidden');
+            document.getElementById('intent-section').classList.add('hidden');
+            document.getElementById('buying-catalog-section').classList.add('hidden');
+            document.getElementById('selling-wizard-section').classList.add('hidden');
+            document.getElementById('my-items-section').classList.add('hidden');
+            document.getElementById('renting-catalog-section').classList.add('hidden');
+            document.getElementById('job-seeker-section').classList.add('hidden');
+            document.getElementById('post-job-wizard-section').classList.add('hidden');
+            document.getElementById('app-section').classList.add('hidden');
+            document.getElementById('renting-wizard-section').classList.remove('hidden');
+
+            rentalStep = 1;
+            rentalDraft = { type: 'Room', subType: '', title: '', photos: [], price: '', location: '', email: userDataBuffer.email || '' };
+            renderRentalStep();
+        }
+
+        function renderRentalStep() {
+            const container = document.getElementById('rental-step-container');
+            const badge = document.getElementById('rental-step-badge');
+            const backBtn = document.getElementById('rental-back-btn');
+            const nextBtn = document.getElementById('rental-next-btn');
+
+            if (rentalStep > 1) backBtn.classList.remove('hidden');
+            else backBtn.classList.add('hidden');
+
+            nextBtn.disabled = false;
+            container.innerHTML = '';
+
+            if (rentalStep === 1) {
+                badge.innerText = "Step 1 of 5: What do you want to rent?";
+                nextBtn.innerText = "Next Step";
+                container.innerHTML = `
+                    <div class="form-step">
+                        <label>Select Rental Type</label>
+                        <select id="rental-type-select" onchange="updateRentalSubType(this.value)">
+                            <option value="Room" ${rentalDraft.type === 'Room' ? 'selected' : ''}>Room</option>
+                            <option value="Property" ${rentalDraft.type === 'Property' ? 'selected' : ''}>Property</option>
+                            <option value="Vehicle" ${rentalDraft.type === 'Vehicle' ? 'selected' : ''}>Vehicle</option>
+                        </select>
+                    </div>
+                    <div id="vehicle-subtype-box" class="form-step ${rentalDraft.type === 'Vehicle' ? '' : 'hidden'}" style="margin-top:0.75rem;">
+                        <label>Select Vehicle Type</label>
+                        <select id="rental-subtype-select">
+                            <option value="Bike" ${rentalDraft.subType === 'Bike' ? 'selected' : ''}>Bike</option>
+                            <option value="Scooty" ${rentalDraft.subType === 'Scooty' ? 'selected' : ''}>Scooty</option>
+                            <option value="Car" ${rentalDraft.subType === 'Car' ? 'selected' : ''}>Car</option>
+                        </select>
+                    </div>`;
+            } else if (rentalStep === 2) {
+                badge.innerText = "Step 2 of 5: Title & Photos";
+                nextBtn.innerText = "Next: Price";
+                container.innerHTML = `
+                    <div class="form-step"><label>Rental Title & Description</label><input type="text" id="rental-title" required placeholder="e.g. 1BHK Furnished Apartment" value="${rentalDraft.title}"></div>
+                    <div class="form-step" style="margin-top:0.75rem;"><label>Upload Photos (Up to 15)</label><input type="file" id="rental-file-input" accept="image/*" multiple onchange="handleRentalPhotoUpload(event)"><p style="font-size:0.75rem; color:#64748b;">Selected photos: <span id="rental-photo-count">${rentalDraft.photos.length}</span> / 15</p><div id="rental-photo-preview-grid" class="photo-preview-grid"></div></div>`;
+                updateRentalPhotoPreview();
+            } else if (rentalStep === 3) {
+                badge.innerText = "Step 3 of 5: Rental Price";
+                nextBtn.innerText = "Next: Location";
+                container.innerHTML = `<div class="form-step"><label>Rental Price (₹ / month or day)</label><input type="number" id="rental-price" required placeholder="e.g. 8500" value="${rentalDraft.price}"></div>`;
+            } else if (rentalStep === 4) {
+                badge.innerText = "Step 4 of 5: Location";
+                nextBtn.innerText = "Review & List Rental";
+                container.innerHTML = `<div class="form-step"><label>Location / Address</label><input type="text" id="rental-location" required placeholder="e.g. MG Road, Gangtok" value="${rentalDraft.location}"></div>`;
+            } else if (rentalStep === 5) {
+                badge.innerText = "Step 5 of 5: Review Rental";
+                nextBtn.innerText = "💾 Save & Publish Rental";
+                container.innerHTML = `
+                    <div class="form-step" style="text-align:center;">
+                        <label style="text-align:center; font-size: 1.05rem;">Review Rental Details</label>
+                        <img src="${rentalDraft.photos[0] || 'https://via.placeholder.com/150'}" class="review-face-thumb" alt="Rental">
+                        <div class="review-box">
+                            <p><strong>Type:</strong> ${rentalDraft.type} ${rentalDraft.subType ? '(' + rentalDraft.subType + ')' : ''}</p>
+                            <p><strong>Title:</strong> ${rentalDraft.title}</p>
+                            <p><strong>Price:</strong> ₹${rentalDraft.price}</p>
+                            <p><strong>Location:</strong> ${rentalDraft.location}</p>
+                        </div>
+                    </div>`;
+            }
+        }
+
+        function updateRentalSubType(val) {
+            rentalDraft.type = val;
+            const subBox = document.getElementById('vehicle-subtype-box');
+            if (val === 'Vehicle') subBox.classList.remove('hidden');
+            else subBox.classList.add('hidden');
+        }
+
+        function handleRentalPhotoUpload(event) {
+            const files = event.target.files;
+            for (let i = 0; i < files.length; i++) {
+                if (rentalDraft.photos.length >= 15) break;
+                compressImageFile(files[i], function(compressedDataUrl) {
+                    if (rentalDraft.photos.length < 15) {
+                        rentalDraft.photos.push(compressedDataUrl);
+                        updateRentalPhotoPreview();
+                    }
+                });
+            }
+        }
+
+        function updateRentalPhotoPreview() {
+            const grid = document.getElementById('rental-photo-preview-grid');
+            const countEl = document.getElementById('rental-photo-count');
+            if (!grid) return;
+            countEl.innerText = rentalDraft.photos.length;
+            grid.innerHTML = rentalDraft.photos.map(src => `<img src="${src}" class="photo-thumb-box" alt="Rental photo">`).join('');
+        }
+
+        function prevRentalStep() { if (rentalStep > 1) { rentalStep--; renderRentalStep(); } }
+
+        async function handleRentalFormStep(event) {
+            event.preventDefault();
+            if (rentalStep === 1) {
+                rentalDraft.type = document.getElementById('rental-type-select').value;
+                rentalDraft.subType = (rentalDraft.type === 'Vehicle') 
+                    ? document.getElementById('rental-subtype-select').value 
+                    : '';
+                rentalStep++; renderRentalStep();
+            } else if (rentalStep === 2) {
+                rentalDraft.title = document.getElementById('rental-title').value.trim();
+                if (rentalDraft.photos.length === 0) { alert("Please upload at least 1 photo."); return; }
+                rentalStep++; renderRentalStep();
+            } else if (rentalStep === 3) {
+                rentalDraft.price = document.getElementById('rental-price').value.trim();
+                rentalStep++; renderRentalStep();
+            } else if (rentalStep === 4) {
+                rentalDraft.location = document.getElementById('rental-location').value.trim();
+                rentalStep++; renderRentalStep();
+            } else if (rentalStep === 5) {
+                const nextBtn = document.getElementById('rental-next-btn');
+                nextBtn.disabled = true;
+                nextBtn.innerText = "Saving...";
+
+                const payload = {
+                    owner_email: userDataBuffer.email || '',
+                    owner_name: userDataBuffer.sweetName || 'Rental Owner',
+                    rental_type: rentalDraft.type,
+                    sub_type: rentalDraft.subType,
+                    title: rentalDraft.title,
+                    price: parseFloat(rentalDraft.price) || 0,
+                    location: rentalDraft.location,
+                    image: rentalDraft.photos[0] || 'https://via.placeholder.com/150',
+                    all_photos: JSON.stringify(rentalDraft.photos),
+                    status: 'AVAILABLE'
+                };
+
+                try {
+                    const res = await fetch('/api/rentals', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const text = await res.text();
+                    let result;
+                    try {
+                        result = JSON.parse(text);
+                    } catch (parseErr) {
+                        throw new Error("API endpoint /api/rentals not found yet.");
+                    }
+
+                    if (result.success) {
+                        await prefetchRentals();
+                        alert("✅ Rental listed successfully!");
+                        showRentingCatalog();
+                    } else {
+                        alert("❌ Database Error: " + (result.error || "Unknown error"));
+                    }
+                } catch (err) {
+                    alert("⚠️ Failed to save: " + err.message);
+                } finally {
+                    nextBtn.disabled = false;
+                    nextBtn.innerText = "💾 Save & Publish Rental";
+                }
+            }
+        }
+
+        function showRentingCatalog() {
+            closeRentingChoiceModal();
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('wizard-section').classList.add('hidden');
+            document.getElementById('sync-section').classList.add('hidden');
+            document.getElementById('intent-section').classList.add('hidden');
+            document.getElementById('buying-catalog-section').classList.add('hidden');
+            document.getElementById('selling-wizard-section').classList.add('hidden');
+            document.getElementById('my-items-section').classList.add('hidden');
+            document.getElementById('renting-wizard-section').classList.add('hidden');
+            document.getElementById('job-seeker-section').classList.add('hidden');
+            document.getElementById('post-job-wizard-section').classList.add('hidden');
+            document.getElementById('app-section').classList.add('hidden');
+            document.getElementById('renting-catalog-section').classList.remove('hidden');
+
+            const container = document.getElementById('catalog-rentals-container');
+            const cached = localStorage.getItem('cached_rentals');
+            if (cached) {
+                try {
+                    renderRentals(JSON.parse(cached), container);
+                } catch(e) { container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:2rem;">Loading rentals...</div>`; }
+            } else {
+                container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:2rem;">Loading rentals...</div>`;
+            }
+
+            fetch('/api/rentals')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.items) {
+                        localStorage.setItem('cached_rentals', JSON.stringify(data.items));
+                        renderRentals(data.items, container);
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+
+        function renderRentals(items, container) {
+            if (items.length > 0) {
+                container.innerHTML = items.map(item => `
+                    <div class="item-card">
+                        <img src="${escapeHtml(item.image || '')}" class="item-thumb" alt="Rental">
+                        <div class="item-details">
+                            <p class="item-title">${escapeHtml(item.title)}</p>
+                            <p class="item-price">₹${item.price} <span style="font-size:0.72rem; color:#64748b; font-weight:normal;">(${escapeHtml(item.rental_type)} ${item.sub_type ? '- ' + escapeHtml(item.sub_type) : ''})</span></p>
+                            <p class="item-seller">📍 Location: ${escapeHtml(item.location)} | Owner: ${escapeHtml(item.owner_name)}</p>
+                            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                                <button type="button" class="action-btn" onclick="openPrivateChat(${item.id}, '${escapeHtml(item.owner_email)}', '${escapeHtml(item.title)}')">💬 Message Owner</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 2rem;">No rental listings available right now.</div>`;
+            }
+        }
+
+        /* --- SELLING WIZARD LOGIC --- */
+        function startSellingWizard() {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('wizard-section').classList.add('hidden');
+            document.getElementById('sync-section').classList.add('hidden');
+            document.getElementById('intent-section').classList.add('hidden');
+            document.getElementById('buying-catalog-section').classList.add('hidden');
+            document.getElementById('my-items-section').classList.add('hidden');
+            document.getElementById('renting-wizard-section').classList.add('hidden');
+            document.getElementById('renting-catalog-section').classList.add('hidden');
+            document.getElementById('job-seeker-section').classList.add('hidden');
+            document.getElementById('post-job-wizard-section').classList.add('hidden');
+            document.getElementById('app-section').classList.add('hidden');
+            document.getElementById('selling-wizard-section').classList.remove('hidden');
+
+            sellerStep = 1;
+            itemDraft = { title: '', photos: [], price: '', email: userDataBuffer.email || '', whatsapp: '' };
+            renderSellerStep();
+        }
+
+        function renderSellerStep() {
+            const container = document.getElementById('seller-step-container');
+            const badge = document.getElementById('seller-step-badge');
+            const backBtn = document.getElementById('seller-back-btn');
+            const nextBtn = document.getElementById('seller-next-btn');
+
+            if (sellerStep > 1) backBtn.classList.remove('hidden');
+            else backBtn.classList.add('hidden');
+
+            nextBtn.disabled = false;
+            container.innerHTML = '';
+
+            if (sellerStep === 1) {
+                badge.innerText = "Step 1 of 4: Item Name";
+                nextBtn.innerText = "Next: Add Photos";
+                container.innerHTML = `<div class="form-step"><label>Item Title & Description</label><input type="text" id="draft-title" required placeholder="e.g., Mountain Bicycle" value="${itemDraft.title}"></div>`;
+            } else if (sellerStep === 2) {
+                badge.innerText = "Step 2 of 4: Item Photos (Up to 15)";
+                nextBtn.innerText = "Next: Set Price";
+                container.innerHTML = `<div class="form-step"><label>Upload Photos</label><input type="file" id="draft-file-input" accept="image/*" multiple onchange="handlePhotoUpload(event)" style="margin-bottom:0.5rem;"><p style="font-size:0.75rem; color:#64748b;">Selected photos: <span id="photo-count">${itemDraft.photos.length}</span> / 15</p><div id="photo-preview-grid" class="photo-preview-grid"></div></div>`;
+                updatePhotoPreview();
+            } else if (sellerStep === 3) {
+                badge.innerText = "Step 3 of 4: Item Price";
+                nextBtn.innerText = "Next: Contact Details";
+                container.innerHTML = `<div class="form-step"><label>Enter Price (₹)</label><input type="number" id="draft-price" required placeholder="e.g. 4500" value="${itemDraft.price}"></div>`;
+            } else if (sellerStep === 4) {
+                badge.innerText = "Step 4 of 4: Contact Info";
+                nextBtn.innerText = "💾 Save & List Item Permanently";
+                container.innerHTML = `
+                    <div class="form-step"><label>Mandatory Email Address</label><input type="email" id="draft-email" required value="${itemDraft.email || userDataBuffer.email || ''}"></div>
+                    <div class="form-step" style="margin-top:0.75rem;"><label>WhatsApp Number (Private / For future use)</label><input type="tel" id="draft-whatsapp" maxlength="10" placeholder="10-digit number" value="${itemDraft.whatsapp || ''}"></div>`;
+            }
+        }
+
+        function handlePhotoUpload(event) {
+            const files = event.target.files;
+            for (let i = 0; i < files.length; i++) {
+                if (itemDraft.photos.length >= 15) break;
+                compressImageFile(files[i], function(compressedDataUrl) {
+                    if (itemDraft.photos.length < 15) {
+                        itemDraft.photos.push(compressedDataUrl);
+                        updatePhotoPreview();
+                    }
+                });
+            }
+        }
+
+        function updatePhotoPreview() {
+            const grid = document.getElementById('photo-preview-grid');
+            const countEl = document.getElementById('photo-count');
+            if (!grid) return;
+            countEl.innerText = itemDraft.photos.length;
+            grid.innerHTML = itemDraft.photos.map(src => `<img src="${src}" class="photo-thumb-box" alt="Item photo">`).join('');
+        }
+
+        function prevSellerStep() { if (sellerStep > 1) { sellerStep--; renderSellerStep(); } }
+
+        async function handleSellerFormStep(event) {
+            event.preventDefault();
+            if (sellerStep === 1) { itemDraft.title = document.getElementById('draft-title').value.trim(); sellerStep++; renderSellerStep(); }
+            else if (sellerStep === 2) {
+                if (itemDraft.photos.length === 0) { alert("Please upload at least 1 photo."); return; }
+                sellerStep++; renderSellerStep();
+            } else if (sellerStep === 3) { itemDraft.price = document.getElementById('draft-price').value.trim(); sellerStep++; renderSellerStep(); }
+            else if (sellerStep === 4) {
+                const nextBtn = document.getElementById('seller-next-btn');
+                nextBtn.disabled = true;
+                nextBtn.innerText = "Saving...";
+
+                itemDraft.email = document.getElementById('draft-email').value.trim();
+                itemDraft.whatsapp = document.getElementById('draft-whatsapp').value.trim();
+
+                const payload = {
+                    seller_email: itemDraft.email,
+                    seller_name: userDataBuffer.sweetName || 'Community Seller',
+                    item_title: itemDraft.title,
+                    item_price: parseFloat(itemDraft.price) || 0,
+                    item_image: itemDraft.photos[0] || 'https://via.placeholder.com/150',
+                    whatsapp: itemDraft.whatsapp,
+                    all_photos: JSON.stringify(itemDraft.photos),
+                    status: 'AVAILABLE'
+                };
+
+                try {
+                    const res = await fetch('/api/market-items', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const text = await res.text();
+                    let result;
+                    try {
+                        result = JSON.parse(text);
+                    } catch (parseErr) {
+                        throw new Error("API endpoint /api/market-items not found yet.");
+                    }
+
+                    if (result.success) {
+                        await prefetchMarketItems();
+                        alert("✅ Item listed successfully!");
+                        showMyItems();
+                    } else {
+                        alert("❌ Database Error: " + (result.error || "Unknown error"));
+                    }
+                } catch (err) {
+                    alert("⚠️ Failed to save: " + err.message);
+                } finally {
+                    nextBtn.disabled = false;
+                    nextBtn.innerText = "💾 Save & List Item Permanently";
+                }
+            }
+        }
+
+        function showBuyingCatalog() {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('wizard-section').classList.add('hidden');
+            document.getElementById('sync-section').classList.add('hidden');
+            document.getElementById('intent-section').classList.add('hidden');
+            document.getElementById('selling-wizard-section').classList.add('hidden');
+            document.getElementById('my-items-section').classList.add('hidden');
+            document.getElementById('renting-wizard-section').classList.add('hidden');
+            document.getElementById('renting-catalog-section').classList.add('hidden');
+            document.getElementById('job-seeker-section').classList.add('hidden');
+            document.getElementById('post-job-wizard-section').classList.add('hidden');
+            document.getElementById('app-section').classList.add('hidden');
+            document.getElementById('buying-catalog-section').classList.remove('hidden');
+
+            const catalogContainer = document.getElementById('catalog-items-container');
+
+            const cachedData = localStorage.getItem('cached_market_items');
+            if (cachedData) {
+                try {
+                    const items = JSON.parse(cachedData);
+                    renderBuyingItems(items, catalogContainer);
+                } catch (e) { 
+                    catalogContainer.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 2rem;">Loading items...</div>`;
+                }
+            } else {
+                catalogContainer.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 2rem;">Loading items...</div>`;
+            }
+
+            fetch('/api/market-items')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.items) {
+                        localStorage.setItem('cached_market_items', JSON.stringify(data.items));
+                        renderBuyingItems(data.items, catalogContainer);
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+
+        function renderBuyingItems(items, container) {
+            const availableItems = items.filter(i => (!i.status || i.status === 'AVAILABLE'));
+            if (availableItems.length > 0) {
+                container.innerHTML = availableItems.map(item => `
+                    <div class="item-card">
+                        <img src="${escapeHtml(item.item_image || '')}" class="item-thumb" alt="Item">
+                        <div class="item-details">
+                            <p class="item-title">${escapeHtml(item.item_title)}</p>
+                            <p class="item-price">₹${item.item_price}</p>
+                            <p class="item-seller">Seller: ${escapeHtml(item.seller_name)}</p>
+                            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                                <button type="button" class="action-btn" onclick="openPrivateChat(${item.id}, '${escapeHtml(item.seller_email)}', '${escapeHtml(item.item_title)}')">💬 Message Seller</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 2rem;">No available items right now.</div>`;
+            }
+        }
+
+        function showMyItems() {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('wizard-section').classList.add('hidden');
+            document.getElementById('sync-section').classList.add('hidden');
+            document.getElementById('intent-section').classList.add('hidden');
+            document.getElementById('buying-catalog-section').classList.add('hidden');
+            document.getElementById('selling-wizard-section').classList.add('hidden');
+            document.getElementById('renting-wizard-section').classList.add('hidden');
+            document.getElementById('renting-catalog-section').classList.add('hidden');
+            document.getElementById('job-seeker-section').classList.add('hidden');
+            document.getElementById('post-job-wizard-section').classList.add('hidden');
+            document.getElementById('app-section').classList.add('hidden');
+            document.getElementById('my-items-section').classList.remove('hidden');
+
+            const container = document.getElementById('my-items-container');
+            const userEmail = userDataBuffer.email || '';
+
+            const cachedData = localStorage.getItem('cached_market_items');
+            if (cachedData) {
+                try {
+                    const allItems = JSON.parse(cachedData);
+                    window.myCachedItems = userEmail === 'dayaandjetalal18@gmail.com' ? allItems : allItems.filter(i => i.seller_email === userEmail);
+                    renderMyItems(window.myCachedItems, container);
+                } catch (e) {
+                    container.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 2rem;">Loading your items...</div>`;
+                }
+            } else {
+                container.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 2rem;">Loading your items...</div>`;
+            }
+
+            fetch('/api/market-items')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.items) {
+                        localStorage.setItem('cached_market_items', JSON.stringify(data.items));
+                        window.myCachedItems = userEmail === 'dayaandjetalal18@gmail.com' ? data.items : data.items.filter(i => i.seller_email === userEmail);
+                        renderMyItems(window.myCachedItems, container);
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+
+        function renderMyItems(items, container) {
+            if (items.length > 0) {
+                container.innerHTML = items.map(item => `
+                    <div class="item-card">
+                        <img src="${escapeHtml(item.item_image || '')}" class="item-thumb" alt="Item">
+                        <div class="item-details">
+                            <p class="item-title">${escapeHtml(item.item_title)}</p>
+                            <p class="item-price">₹${item.item_price}</p>
+                            <p class="item-seller">Seller: ${escapeHtml(item.seller_email)} | Status: <span class="${item.status === 'SOLD' ? 'sold-badge' : 'available-badge'}">${item.status || 'AVAILABLE'}</span></p>
+                            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.4rem;">
+                                <button type="button" class="action-btn" onclick="openEditPhotosModal(${item.id})">✏️ Edit Photos</button>
+                                <button type="button" class="action-btn" style="background: ${item.status === 'SOLD' ? '#10b981' : '#f59e0b'};" onclick="toggleItemStatus(${item.id}, '${item.status}')">${item.status === 'SOLD' ? '🔄 Mark Available' : '✅ Mark Sold'}</button>
+                                <button type="button" class="action-btn" onclick="openPrivateChat(${item.id}, '${escapeHtml(item.seller_email)}', '${escapeHtml(item.item_title)}')">💬 View Messages</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 2rem;"><p>No items found.</p><button type="button" class="action-btn" onclick="startSellingWizard()">+ List Item</button></div>`;
+            }
+        }
+
         function openPrivateChat(itemId, recipientEmail, itemTitle) {
             activePrivateChat = { itemId, recipientEmail, title: itemTitle };
             document.getElementById('private-chat-title').innerText = `💬 Chat: ${itemTitle}`;
@@ -1024,7 +2061,7 @@
                     feed.innerHTML = data.messages.map(m => `
                         <div class="chat-bubble" style="background: ${m.sender_email === userEmail ? '#eff6ff' : '#ffffff'};">
                             <div class="chat-bubble-header">
-                                <span class="chat-bubble-user">${escapeHtml(m.sender_name)}</span>
+                                <span class="chat-bubble-user">${escapeHtml(m.sender_name)} (${escapeHtml(m.sender_email)})</span>
                                 <span>${new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                             </div>
                             <div style="color: #1e293b; word-break: break-word;">${escapeHtml(m.message)}</div>
@@ -1065,15 +2102,106 @@
             } catch (err) { console.error(err); }
         }
 
+        async function toggleItemStatus(itemId, currentStatus) {
+            const newStatus = (currentStatus === 'SOLD') ? 'AVAILABLE' : 'SOLD';
+            const item = window.myCachedItems.find(i => i.id === itemId);
+            if (!item) return;
+
+            try {
+                await fetch('/api/market-items', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...item, status: newStatus })
+                });
+                prefetchMarketItems();
+                showMyItems();
+            } catch(e) { console.error(e); }
+        }
+
+        function openEditPhotosModal(itemId) {
+            editingItemId = itemId;
+            const item = window.myCachedItems.find(i => i.id === itemId);
+            if (!item) return;
+            try { editingItemPhotos = item.all_photos ? JSON.parse(item.all_photos) : [item.item_image]; }
+            catch(e) { editingItemPhotos = [item.item_image]; }
+            updateEditPhotoPreview();
+            document.getElementById('edit-photos-modal').classList.remove('hidden');
+        }
+
+        function closeEditPhotosModal() {
+            document.getElementById('edit-photos-modal').classList.add('hidden');
+            editingItemId = null; editingItemPhotos = [];
+        }
+
+        function handleEditPhotoUpload(event) {
+            const files = event.target.files;
+            for (let i = 0; i < files.length; i++) {
+                if (editingItemPhotos.length >= 15) break;
+                compressImageFile(files[i], function(compressedDataUrl) {
+                    if (editingItemPhotos.length < 15) {
+                        editingItemPhotos.push(compressedDataUrl);
+                        updateEditPhotoPreview();
+                    }
+                });
+            }
+        }
+
+        function updateEditPhotoPreview() {
+            const grid = document.getElementById('edit-photo-preview-grid');
+            const countEl = document.getElementById('edit-photo-count');
+            if (!grid) return;
+            countEl.innerText = editingItemPhotos.length;
+            grid.innerHTML = editingItemPhotos.map(src => `<img src="${src}" class="photo-thumb-box" alt="Edited photo">`).join('');
+        }
+
+        async function saveEditedPhotos() {
+            if (!editingItemId) return;
+            const item = window.myCachedItems.find(i => i.id === editingItemId);
+            if (!item) return;
+
+            try {
+                await fetch('/api/market-items', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...item, item_image: editingItemPhotos[0], all_photos: JSON.stringify(editingItemPhotos) })
+                });
+                prefetchMarketItems();
+                alert("✅ Photos updated successfully!");
+                closeEditPhotosModal();
+                showMyItems();
+            } catch (err) { console.error(err); }
+        }
+
         function showDashboardMain() {
+            document.getElementById('buying-catalog-section').classList.add('hidden');
+            document.getElementById('selling-wizard-section').classList.add('hidden');
+            document.getElementById('my-items-section').classList.add('hidden');
+            document.getElementById('renting-wizard-section').classList.add('hidden');
+            document.getElementById('renting-catalog-section').classList.add('hidden');
             document.getElementById('job-seeker-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
             showApp(userDataBuffer);
         }
 
+        function filterMenuList(query) {
+            const filter = query.toLowerCase();
+            const items = document.getElementById('menu-intent-list').getElementsByTagName('a');
+            for (let i = 0; i < items.length; i++) {
+                items[i].style.display = (items[i].innerText.toLowerCase().indexOf(filter) > -1) ? "" : "none";
+            }
+        }
+
         function toggleMenu() {
             const menu = document.getElementById('dropdown-menu');
             menu.classList.toggle('show-dropdown');
+            document.getElementById('hamburger-arrow').innerText = menu.classList.contains('show-dropdown') ? "▲" : "▼";
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.closest('.hamburger-menu') && !event.target.matches('.notif-btn')) {
+                document.getElementById('dropdown-menu').classList.remove('show-dropdown');
+                document.getElementById('hamburger-arrow').innerText = "▼";
+            }
         }
 
         function showApp(profile) {
@@ -1081,6 +2209,11 @@
             document.getElementById('wizard-section').classList.add('hidden');
             document.getElementById('sync-section').classList.add('hidden');
             document.getElementById('intent-section').classList.add('hidden');
+            document.getElementById('buying-catalog-section').classList.add('hidden');
+            document.getElementById('selling-wizard-section').classList.add('hidden');
+            document.getElementById('my-items-section').classList.add('hidden');
+            document.getElementById('renting-wizard-section').classList.add('hidden');
+            document.getElementById('renting-catalog-section').classList.add('hidden');
             document.getElementById('job-seeker-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
             document.getElementById('app-section').classList.remove('hidden');
@@ -1088,14 +2221,28 @@
             document.getElementById('user-name').innerText = "Hi, " + (profile.sweetName || 'User');
             document.getElementById('user-avatar').src = profile.faceIdUrl || profile.picture || 'https://via.placeholder.com/42';
             document.getElementById('user-intent-badge').innerText = "Intent: " + (profile.intent || '1. Buying');
+
+            prefetchMarketItems();
+            prefetchRentals();
         }
 
         function openProfileModal() {
             document.getElementById('modal-face-thumb').src = userDataBuffer.faceIdUrl || 'https://via.placeholder.com/70';
-            document.getElementById('modal-profile-details').innerHTML = `<p><strong>Email:</strong> ${userDataBuffer.email}</p><p><strong>Sweet Name:</strong> ${userDataBuffer.sweetName}</p>`;
+            document.getElementById('modal-profile-details').innerHTML = `<p><strong>Email:</strong> ${userDataBuffer.email}</p><p><strong>Sweet Name:</strong> ${userDataBuffer.sweetName}</p><p><strong>Mobile:</strong> ${userDataBuffer.mobileNumber}</p>`;
             document.getElementById('profile-modal').classList.remove('hidden');
         }
         function closeProfileModal() { document.getElementById('profile-modal').classList.add('hidden'); }
+
+        function submitEditRequest(event) {
+            event.preventDefault();
+            window.location.href = `mailto:dayaandjetalal18@gmail.com?subject=Edit Request&body=${encodeURIComponent(document.getElementById('edit-request-text').value)}`;
+            closeProfileModal();
+        }
+
+        function openNotificationModal() { document.getElementById('notification-modal').classList.remove('hidden'); document.getElementById('notif-dot').classList.add('hidden'); }
+        function closeNotificationModal() { document.getElementById('notification-modal').classList.add('hidden'); }
+        function reactNotif(id, emoji) {}
+        function askAiBot() { document.getElementById('ai-response-box').innerText = "AI Bot: I'm here to help you navigate your marketplace dashboard!"; }
         function logout() { localStorage.clear(); location.reload(); }
 
         window.onload = function () {
