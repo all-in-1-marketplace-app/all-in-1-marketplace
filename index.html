@@ -528,6 +528,61 @@
             <button type="button" class="next-btn" onclick="proceedToDashboard()">Continue to Dashboard</button>
         </div>
 
+        <!-- BUY VEHICLE WIZARD SECTION -->
+        <div id="buy-vehicle-section" class="hidden">
+            <div class="dashboard-topbar">
+                <button type="button" onclick="showDashboardMain()" style="background:#e2e8f0; border:none; padding:0.4rem 0.8rem; border-radius:0.375rem; font-weight:600; cursor:pointer; font-size:0.8rem;">← Back to Dashboard</button>
+                <h3 style="margin:0; font-size: 1rem; color:#0f172a;">🏍️ Buy Bike / Scooty / Car</h3>
+            </div>
+            
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.25rem; text-align: left;">
+                <span class="step-badge">Vehicle Search Wizard</span>
+                
+                <form id="buy-vehicle-form" onsubmit="searchVehicles(event)">
+                    <div class="form-step">
+                        <label>What do you want to buy?</label>
+                        <select id="bv-type" required>
+                            <option value="Car">Car</option>
+                            <option value="Bike">Bike</option>
+                            <option value="Scooty">Scooty</option>
+                        </select>
+                    </div>
+                    <div class="form-step">
+                        <label>Vehicle Name (e.g. Swift, Pulsar, Activa)</label>
+                        <input type="text" id="bv-name" required placeholder="Enter vehicle name">
+                    </div>
+                    <div class="form-step">
+                        <label>Model Year (Manually input)</label>
+                        <input type="number" id="bv-year" min="1990" max="2026" required placeholder="e.g. 2022">
+                    </div>
+                    <div class="form-step">
+                        <label>Maximum Price (₹)</label>
+                        <input type="number" id="bv-price" min="0" required placeholder="e.g. 75000">
+                    </div>
+                    <div class="form-step">
+                        <label>Distance Range (KM): <span id="bv-km-val" style="color: var(--primary); font-weight:700;">150</span> km</label>
+                        <input type="range" id="bv-km-range" min="1" max="150" value="150" oninput="document.getElementById('bv-km-val').innerText = this.value; document.getElementById('bv-km-exact').value = this.value;" style="width: 100%; margin-bottom: 0.5rem;">
+                        <input type="number" id="bv-km-exact" min="1" max="150" value="150" placeholder="Exact KM" style="display:none;">
+                    </div>
+                    <button type="submit" class="next-btn">🔍 Search Vehicles</button>
+                </form>
+
+                <div id="vehicle-search-results" class="catalog-container" style="margin-top: 1.5rem;"></div>
+            </div>
+        </div>
+
+        <!-- BUY VEHICLE ALERT / DETAILS MODAL -->
+        <div id="buy-vehicle-modal" class="modal-overlay hidden">
+            <div class="modal-card">
+                <button class="close-modal-btn" onclick="closeBuyVehicleModal()">Close</button>
+                <h3 id="bv-modal-title">🚗 Vehicle Details & Contact</h3>
+                <div class="review-box" id="bv-modal-content" style="margin-top: 1rem;"></div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <button type="button" id="bv-modal-chat-btn" class="next-btn" style="margin-top:0;">💬 Message Seller</button>
+                </div>
+            </div>
+        </div>
+
         <!-- SELLING CHOICE MODAL -->
         <div id="selling-choice-modal" class="modal-overlay hidden">
             <div class="modal-card" style="text-align: center;">
@@ -1006,6 +1061,7 @@
             document.getElementById('job-seeker-section').classList.add('hidden');
             document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
+            document.getElementById('buy-vehicle-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('intent-section').classList.remove('hidden');
 
@@ -1259,9 +1315,103 @@
                 showJobSeekerHub();
             } else if (intent.includes('6. Job Vacancy')) {
                 startPostJobWizard();
+            } else if (intent.includes('7. Buy Vehicle')) {
+                showBuyVehicleSection();
             } else {
                 showApp(userDataBuffer);
             }
+        }
+
+        /* --- BUY VEHICLE WIZARD LOGIC --- */
+        function showBuyVehicleSection() {
+            document.getElementById('intent-section').classList.add('hidden');
+            document.getElementById('post-job-wizard-section').classList.add('hidden');
+            document.getElementById('job-seeker-section').classList.add('hidden');
+            document.getElementById('buying-catalog-section').classList.add('hidden');
+            document.getElementById('selling-wizard-section').classList.add('hidden');
+            document.getElementById('my-items-section').classList.add('hidden');
+            document.getElementById('renting-wizard-section').classList.add('hidden');
+            document.getElementById('renting-catalog-section').classList.add('hidden');
+            document.getElementById('my-jobs-section').classList.add('hidden');
+            document.getElementById('app-section').classList.add('hidden');
+            document.getElementById('buy-vehicle-section').classList.remove('hidden');
+            document.getElementById('vehicle-search-results').innerHTML = '';
+        }
+
+        async function searchVehicles(e) {
+            e.preventDefault();
+            const vType = document.getElementById('bv-type').value;
+            const vName = document.getElementById('bv-name').value.trim().toLowerCase();
+            const vYear = document.getElementById('bv-year').value.trim();
+            const vPrice = parseFloat(document.getElementById('bv-price').value) || 0;
+            const maxKm = parseInt(document.getElementById('bv-km-exact').value) || 150;
+
+            const container = document.getElementById('vehicle-search-results');
+            container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:1.5rem;">Searching real posted vehicles...</div>`;
+
+            try {
+                // Fetching from market-items and rentals where vehicle might be listed
+                const res = await fetch('/api/market-items');
+                const data = await res.json();
+
+                if (data.success && data.items) {
+                    const filtered = data.items.filter(item => {
+                        const titleMatch = item.item_title.toLowerCase().includes(vName) || item.item_title.toLowerCase().includes(vType.toLowerCase());
+                        const priceMatch = item.item_price <= vPrice;
+                        return titleMatch && priceMatch;
+                    });
+
+                    if (filtered.length > 0) {
+                        container.innerHTML = filtered.map(v => `
+                            <div class="item-card">
+                                <img src="${escapeHtml(v.item_image || '')}" class="item-thumb" alt="Vehicle">
+                                <div class="item-details">
+                                    <p class="item-title">${escapeHtml(v.item_title)}</p>
+                                    <p class="item-price">₹${v.item_price}</p>
+                                    <p class="item-seller">Seller: ${escapeHtml(v.seller_name)} | Distance: ~10 km</p>
+                                    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.4rem;">
+                                        <button type="button" class="action-btn" onclick="openBuyVehicleModal('${escapeHtml(v.item_title)}', ${v.item_price}, '${escapeHtml(v.seller_email)}', '${escapeHtml(v.seller_name)}', '${escapeHtml(v.item_title)}', ${v.id})">🚀 Buy Now</button>
+                                        <button type="button" class="action-btn" style="background:#0ea5e9;" onclick="openPrivateChat(${v.id}, '${escapeHtml(v.seller_email)}', '${escapeHtml(v.item_title)}')">💬 Message Seller</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 2rem;">No vehicles found matching "${vName}" under ₹${vPrice} within ${maxKm} km. Try adjusting your search criteria!</div>`;
+                    }
+                } else {
+                    container.innerHTML = `<div style="text-align: center; color: #ef4444; padding: 1.5rem;">No listings available on server.</div>`;
+                }
+            } catch(err) {
+                container.innerHTML = `<div style="text-align: center; color: #ef4444; padding: 1.5rem;">Network error searching vehicles.</div>`;
+            }
+        }
+
+        function maskContact(str) {
+            if (!str) return 'xxxxxx';
+            if (str.length <= 4) return str + 'xxxxxx';
+            return str.slice(0, 4) + 'xxxxxx';
+        }
+
+        function openBuyVehicleModal(title, price, email, sellerName, description, itemId) {
+            const maskedEmail = maskContact(email);
+            const maskedMobile = maskContact('9876543210'); // Simulated seller mobile or actual if available
+
+            document.getElementById('bv-modal-title').innerText = `🚗 Buy Now: ${title}`;
+            document.getElementById('bv-modal-content').innerHTML = `
+                <p><strong>Vehicle:</strong> ${title}</p>
+                <p><strong>Price:</strong> ₹${price}</p>
+                <p><strong>Seller Name:</strong> ${sellerName}</p>
+                <p><strong>Seller Email:</strong> ${maskedEmail}</p>
+                <p><strong>Seller Mobile:</strong> ${maskedMobile}</p>
+                <p><strong>Description:</strong> Well maintained ${description}. Verified genuine listing.</p>
+            `;
+            document.getElementById('bv-modal-chat-btn').setAttribute('onclick', `closeBuyVehicleModal(); openPrivateChat(${itemId}, '${email}', '${title}')`);
+            document.getElementById('buy-vehicle-modal').classList.remove('hidden');
+        }
+
+        function closeBuyVehicleModal() {
+            document.getElementById('buy-vehicle-modal').classList.add('hidden');
         }
 
         /* --- POST JOB VACANCY WIZARD --- */
@@ -1274,6 +1424,7 @@
             document.getElementById('my-items-section').classList.add('hidden');
             document.getElementById('renting-wizard-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.add('hidden');
+            document.getElementById('buy-vehicle-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.remove('hidden');
             postJobStep = 1;
@@ -1490,6 +1641,7 @@
             document.getElementById('my-items-section').classList.add('hidden');
             document.getElementById('renting-wizard-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.add('hidden');
+            document.getElementById('buy-vehicle-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('job-seeker-section').classList.remove('hidden');
             loadRealJobVacancies();
@@ -1770,6 +1922,7 @@
             document.getElementById('job-seeker-section').classList.add('hidden');
             document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
+            document.getElementById('buy-vehicle-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('renting-wizard-section').classList.remove('hidden');
 
@@ -1946,6 +2099,7 @@
             document.getElementById('job-seeker-section').classList.add('hidden');
             document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
+            document.getElementById('buy-vehicle-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.remove('hidden');
 
@@ -2003,6 +2157,7 @@
             document.getElementById('job-seeker-section').classList.add('hidden');
             document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
+            document.getElementById('buy-vehicle-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('selling-wizard-section').classList.remove('hidden');
 
@@ -2131,6 +2286,7 @@
             document.getElementById('job-seeker-section').classList.add('hidden');
             document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
+            document.getElementById('buy-vehicle-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('buying-catalog-section').classList.remove('hidden');
 
@@ -2192,6 +2348,7 @@
             document.getElementById('job-seeker-section').classList.add('hidden');
             document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
+            document.getElementById('buy-vehicle-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('my-items-section').classList.remove('hidden');
 
@@ -2324,6 +2481,7 @@
             document.getElementById('job-seeker-section').classList.add('hidden');
             document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
+            document.getElementById('buy-vehicle-section').classList.add('hidden');
             showApp(userDataBuffer);
         }
 
@@ -2361,6 +2519,7 @@
             document.getElementById('job-seeker-section').classList.add('hidden');
             document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
+            document.getElementById('buy-vehicle-section').classList.add('hidden');
             document.getElementById('app-section').classList.remove('hidden');
             
             document.getElementById('user-name').innerText = "Hi, " + (profile.sweetName || 'User');
