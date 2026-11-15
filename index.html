@@ -528,6 +528,80 @@
             <button type="button" class="next-btn" onclick="proceedToDashboard()">Continue to Dashboard</button>
         </div>
 
+        <!-- SELL VEHICLE HUB SECTION -->
+        <div id="sell-vehicle-section" class="hidden">
+            <div class="dashboard-topbar">
+                <button type="button" onclick="showDashboardMain()" style="background:#e2e8f0; border:none; padding:0.4rem 0.8rem; border-radius:0.375rem; font-weight:600; cursor:pointer; font-size:0.8rem;">← Back to Dashboard</button>
+                <h3 style="margin:0; font-size: 1rem; color:#0f172a;">🚗 Sell Bike / Scooty / Car Hub</h3>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                <button type="button" class="action-btn" style="flex:1; background:var(--primary); padding:0.5rem;" onclick="startSellVehicleWizard()">+ Post New Vehicle</button>
+                <button type="button" class="action-btn" style="flex:1; background:#0ea5e9; padding:0.5rem;" onclick="showMyVehicleListings()">📋 Manage & Edit Vehicles</button>
+                <button type="button" class="action-btn" style="flex:1; background:#16a34a; padding:0.5rem;" onclick="showSellerInbox()">💬 Buyer Messages Inbox</button>
+            </div>
+
+            <div id="sell-vehicle-main-content" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.25rem; text-align: left;">
+                <p style="font-size: 0.9rem; color: #475569; text-align: center; margin: 1rem 0;">Select an action above to list your vehicle, check buyer messages, or edit your active listings.</p>
+            </div>
+        </div>
+
+        <!-- POST VEHICLE WIZARD SECTION -->
+        <div id="post-vehicle-wizard-section" class="hidden">
+            <div class="dashboard-topbar">
+                <button type="button" onclick="showSellVehicleHub()" style="background:#e2e8f0; border:none; padding:0.4rem 0.8rem; border-radius:0.375rem; font-weight:600; cursor:pointer; font-size:0.8rem;">← Back to Sell Hub</button>
+                <h3 style="margin:0; font-size: 1rem; color:#0f172a;">🏷️ List Your Vehicle for Sale</h3>
+            </div>
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.25rem; text-align: left;">
+                <form id="sell-vehicle-form" onsubmit="submitVehicleListing(event)">
+                    <div class="form-step">
+                        <label>1. What do you want to sell?</label>
+                        <select id="sv-type" required>
+                            <option value="Car">Car</option>
+                            <option value="Bike">Bike</option>
+                            <option value="Scooty">Scooty</option>
+                        </select>
+                    </div>
+                    <div class="form-step">
+                        <label>2. Vehicle Name & Model Year</label>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="text" id="sv-name" required placeholder="e.g. Honda City, Pulsar" style="flex: 2;">
+                            <input type="number" id="sv-year" required placeholder="Year (e.g. 2021)" min="1980" max="2026" style="flex: 1;">
+                        </div>
+                    </div>
+                    <div class="form-step">
+                        <label>Asking Price (₹)</label>
+                        <input type="number" id="sv-price" min="0" required placeholder="e.g. 120000">
+                    </div>
+                    <div class="form-step">
+                        <label>3. Your Location</label>
+                        <input type="text" id="sv-location" required placeholder="e.g. MG Road, Gangtok">
+                    </div>
+                    <div class="form-step">
+                        <label>4. Description (Mandatory - Max 400 chars)</label>
+                        <textarea id="sv-desc" rows="3" maxlength="400" required placeholder="Describe vehicle condition, kilometers driven, ownership etc..." oninput="document.getElementById('desc-char-count').innerText = this.value.length;"></textarea>
+                        <p style="font-size: 0.75rem; color: #64748b; margin-top: 0.2rem;">Characters: <span id="desc-char-count">0</span> / 400</p>
+                    </div>
+                    <div class="form-step">
+                        <label>Upload Vehicle Photos (Up to 15)</label>
+                        <input type="file" id="sv-file-input" accept="image/*" multiple onchange="handleSellPhotoUpload(event)" style="margin-bottom:0.5rem;">
+                        <p style="font-size:0.75rem; color:#64748b;">Selected photos: <span id="sv-photo-count">0</span> / 15</p>
+                        <div id="sv-photo-preview-grid" class="photo-preview-grid"></div>
+                    </div>
+                    <div class="form-step">
+                        <label>5. Mobile Number</label>
+                        <input type="tel" id="sv-mobile" maxlength="10" required placeholder="10-digit mobile number">
+                    </div>
+                    <div class="form-step">
+                        <label>6. Email Address</label>
+                        <input type="email" id="sv-email" required placeholder="your email address">
+                    </div>
+                    <button type="submit" id="sv-submit-btn" class="next-btn">7. 🚀 List Now</button>
+                </form>
+            </div>
+        </div>
+
         <!-- BUY VEHICLE WIZARD SECTION -->
         <div id="buy-vehicle-section" class="hidden">
             <div class="dashboard-topbar">
@@ -553,7 +627,7 @@
                     </div>
                     <div class="form-step">
                         <label>Model Year (Manually input)</label>
-                        <input type="number" id="bv-year" min="1990" max="2026" required placeholder="e.g. 2022">
+                        <input type="number" id="bv-year" min="1980" max="2026" required placeholder="e.g. 2022">
                     </div>
                     <div class="form-step">
                         <label>Maximum Price (₹)</label>
@@ -591,7 +665,7 @@
                 <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.25rem;">What would you like to do today?</p>
                 
                 <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                    <button type="button" class="next-btn" style="margin-top:0;" onclick="chooseListNewItem()">+ List a New Item</button>
+                    <button type="button" class="next-btn" style="margin-top:0;" onclick="chooseListNewItem()">+ List a General Item</button>
                     <button type="button" class="next-btn" style="background: #0ea5e9; margin-top:0;" onclick="chooseViewMyItems()">📦 View Your Existing Items & Messages</button>
                 </div>
             </div>
@@ -953,6 +1027,8 @@
         let sellerStep = 1;
         let itemDraft = { title: '', photos: [], price: '', email: '', whatsapp: '' };
 
+        let vehicleDraftPhotos = [];
+
         let rentalStep = 1;
         let rentalDraft = { type: 'Room', subType: '', title: '', photos: [], price: '', location: '', email: '' };
 
@@ -965,28 +1041,11 @@
         let activeJobIdForApply = null;
         let currentMaxKm = 150;
 
-        // Post Job Wizard State
         let postJobStep = 1;
         let postJobDraft = {
-            businessType: '',
-            currentStaff: '',
-            vacancies: '1',
-            forGender: 'Male',
-            maleCount: '',
-            femaleCount: '',
-            location: '',
-            salary: '',
-            pf: 'NO',
-            esic: 'NO',
-            fooding: 'NO',
-            lodging: 'NO',
-            workingHours: '',
-            shift: 'Day',
-            schooling: '10th',
-            customSchooling: '',
-            minAge: 18,
-            jobRole: '',
-            udyam: ''
+            businessType: '', currentStaff: '', vacancies: '1', forGender: 'Male', maleCount: '', femaleCount: '',
+            location: '', salary: '', pf: 'NO', esic: 'NO', fooding: 'NO', lodging: 'NO', workingHours: '',
+            shift: 'Day', schooling: '10th', customSchooling: '', minAge: 18, jobRole: '', udyam: ''
         };
 
         function compressImageFile(file, callback) {
@@ -1062,6 +1121,8 @@
             document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
             document.getElementById('buy-vehicle-section').classList.add('hidden');
+            document.getElementById('sell-vehicle-section').classList.add('hidden');
+            document.getElementById('post-vehicle-wizard-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('intent-section').classList.remove('hidden');
 
@@ -1317,8 +1378,208 @@
                 startPostJobWizard();
             } else if (intent.includes('7. Buy Vehicle')) {
                 showBuyVehicleSection();
+            } else if (intent.includes('8. Sell Vehicle')) {
+                showSellVehicleHub();
             } else {
                 showApp(userDataBuffer);
+            }
+        }
+
+        /* --- SELL VEHICLE HUB LOGIC --- */
+        function showSellVehicleHub() {
+            document.getElementById('intent-section').classList.add('hidden');
+            document.getElementById('post-vehicle-wizard-section').classList.add('hidden');
+            document.getElementById('buy-vehicle-section').classList.add('hidden');
+            document.getElementById('buying-catalog-section').classList.add('hidden');
+            document.getElementById('app-section').classList.add('hidden');
+            document.getElementById('sell-vehicle-section').classList.remove('hidden');
+            
+            document.getElementById('sell-vehicle-main-content').innerHTML = `
+                <h4 style="margin-top:0; color:#0f172a;">Welcome to Sell Vehicle Hub</h4>
+                <p style="font-size: 0.85rem; color: #475569;">Use the buttons above to list your car, bike, or scooty, manage/edit your active postings, or check messages from interested buyers!</p>
+            `;
+        }
+
+        function startSellVehicleWizard() {
+            document.getElementById('sell-vehicle-section').classList.add('hidden');
+            document.getElementById('post-vehicle-wizard-section').classList.remove('hidden');
+            vehicleDraftPhotos = [];
+            document.getElementById('sell-vehicle-form').reset();
+            document.getElementById('sv-email').value = userDataBuffer.email || '';
+            document.getElementById('sv-mobile').value = userDataBuffer.mobileNumber || '';
+            updateSellPhotoPreview();
+        }
+
+        function handleSellPhotoUpload(event) {
+            const files = event.target.files;
+            for (let i = 0; i < files.length; i++) {
+                if (vehicleDraftPhotos.length >= 15) break;
+                compressImageFile(files[i], function(compressedDataUrl) {
+                    if (vehicleDraftPhotos.length < 15) {
+                        vehicleDraftPhotos.push(compressedDataUrl);
+                        updateSellPhotoPreview();
+                    }
+                });
+            }
+        }
+
+        function updateSellPhotoPreview() {
+            const grid = document.getElementById('sv-photo-preview-grid');
+            const countEl = document.getElementById('sv-photo-count');
+            if (!grid) return;
+            countEl.innerText = vehicleDraftPhotos.length;
+            grid.innerHTML = vehicleDraftPhotos.map(src => `<img src="${src}" class="photo-thumb-box" alt="Vehicle photo">`).join('');
+        }
+
+        async function submitVehicleListing(e) {
+            e.preventDefault();
+            const vType = document.getElementById('sv-type').value;
+            const vName = document.getElementById('sv-name').value.trim();
+            const vYear = document.getElementById('sv-year').value.trim();
+            const vPrice = parseFloat(document.getElementById('sv-price').value) || 0;
+            const vLocation = document.getElementById('sv-location').value.trim();
+            const vDesc = document.getElementById('sv-desc').value.trim();
+            const vMobile = document.getElementById('sv-mobile').value.trim();
+            const vEmail = document.getElementById('sv-email').value.trim();
+
+            if (vDesc.length > 400) {
+                alert("Description cannot exceed 400 characters.");
+                return;
+            }
+
+            const submitBtn = document.getElementById('sv-submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Saving & Listing...";
+
+            const payload = {
+                seller_email: vEmail,
+                seller_name: userDataBuffer.sweetName || 'Vehicle Seller',
+                item_title: `${vType} - ${vName} (${vYear}) | ${vLocation}`,
+                item_price: vPrice,
+                item_image: vehicleDraftPhotos[0] || 'https://via.placeholder.com/150',
+                whatsapp: vMobile,
+                all_photos: JSON.stringify(vehicleDraftPhotos),
+                status: 'AVAILABLE',
+                description: vDesc,
+                category: 'VEHICLE'
+            };
+
+            try {
+                const res = await fetch('/api/market-items', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    await prefetchMarketItems();
+                    alert("✅ Vehicle listed successfully!");
+                    showMyVehicleListings();
+                } else {
+                    alert("❌ Failed to list vehicle: " + (result.error || "Unknown error"));
+                }
+            } catch(err) {
+                alert("⚠️ Network error while saving vehicle listing.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "7. 🚀 List Now";
+            }
+        }
+
+        async function showMyVehicleListings() {
+            document.getElementById('sell-vehicle-section').classList.remove('hidden');
+            document.getElementById('post-vehicle-wizard-section').classList.add('hidden');
+            const container = document.getElementById('sell-vehicle-main-content');
+            container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:1.5rem;">Loading your vehicle listings...</div>`;
+
+            try {
+                const res = await fetch('/api/market-items');
+                const data = await res.json();
+                const userEmail = userDataBuffer.email || '';
+
+                if (data.success && data.items) {
+                    const myVehicles = data.items.filter(i => i.seller_email === userEmail && (i.category === 'VEHICLE' || i.item_title.includes('Car') || i.item_title.includes('Bike') || i.item_title.includes('Scooty')));
+                    
+                    if (myVehicles.length > 0) {
+                        container.innerHTML = `<h4 style="margin-top:0; color:#0f172a;">Manage & Edit Your Vehicles</h4>` + myVehicles.map(v => `
+                            <div class="item-card">
+                                <img src="${escapeHtml(v.item_image || '')}" class="item-thumb" alt="Vehicle">
+                                <div class="item-details">
+                                    <p class="item-title">${escapeHtml(v.item_title)}</p>
+                                    <p class="item-price">₹${v.item_price}</p>
+                                    <p class="item-seller">Status: <span class="${v.status === 'SOLD' ? 'sold-badge' : 'available-badge'}">${v.status || 'AVAILABLE'}</span></p>
+                                    <p style="font-size:0.8rem; color:#475569; margin:0.2rem 0;">${escapeHtml(v.description || '')}</p>
+                                    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top:0.4rem;">
+                                        <button type="button" class="action-btn" onclick="openEditPhotosModal(${v.id})">✏️ Edit Photos</button>
+                                        <button type="button" class="action-btn" style="background:#f59e0b;" onclick="toggleItemStatus(${v.id}, '${v.status}')">${v.status === 'SOLD' ? '🔄 Make Available' : '✅ Mark Sold'}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 2rem;"><p>You have not posted any vehicles for sale yet.</p><button type="button" class="action-btn" onclick="startSellVehicleWizard()">+ Post New Vehicle</button></div>`;
+                    }
+                }
+            } catch(e) {
+                container.innerHTML = `<div style="text-align: center; color: #ef4444; padding: 1.5rem;">Failed to load vehicles.</div>`;
+            }
+        }
+
+        async function showSellerInbox() {
+            document.getElementById('sell-vehicle-section').classList.remove('hidden');
+            document.getElementById('post-vehicle-wizard-section').classList.add('hidden');
+            const container = document.getElementById('sell-vehicle-main-content');
+            container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:1.5rem;">Loading buyer messages...</div>`;
+
+            try {
+                const res = await fetch('/api/market-items');
+                const data = await res.json();
+                const userEmail = userDataBuffer.email || '';
+
+                if (data.success && data.items) {
+                    const myItems = data.items.filter(i => i.seller_email === userEmail);
+                    if (myItems.length === 0) {
+                        container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 2rem;">You have no active vehicle listings or items to receive messages for.</div>`;
+                        return;
+                    }
+
+                    // Fetch messages for each item owned by the user
+                    let allMessagesHtml = `<h4 style="margin-top:0; color:#0f172a;">💬 Buyer Messages Inbox</h4>`;
+                    let foundAnyMsg = false;
+
+                    for (const item of myItems) {
+                        try {
+                            const msgRes = await fetch(`/api/item-messages?item_id=${item.id}&email=${encodeURIComponent(userEmail)}`);
+                            const msgData = await msgRes.json();
+                            if (msgData.success && msgData.messages && msgData.messages.length > 0) {
+                                foundAnyMsg = true;
+                                const buyerMsgs = msgData.messages.filter(m => m.sender_email !== userEmail);
+                                if (buyerMsgs.length > 0) {
+                                    allMessagesHtml += `<div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:0.5rem; padding:0.75rem; margin-bottom:0.75rem;">
+                                        <p style="margin:0; font-weight:700; font-size:0.9rem; color:#2563eb;">Item: ${escapeHtml(item.item_title)}</p>`;
+                                    for (const bm of buyerMsgs) {
+                                        allMessagesHtml += `
+                                            <div style="background:#f1f5f9; padding:0.5rem; border-radius:0.375rem; margin-top:0.4rem; display:flex; justify-content:space-between; align-items:center;">
+                                                <div>
+                                                    <p style="margin:0; font-weight:600; font-size:0.85rem;">Buyer: ${escapeHtml(bm.sender_name)} (${escapeHtml(bm.sender_email)})</p>
+                                                    <p style="margin:0.2rem 0; font-size:0.8rem; color:#334155;">"${escapeHtml(bm.message)}"</p>
+                                                </div>
+                                                <button type="button" class="action-btn" style="margin-top:0;" onclick="openPrivateChat(${item.id}, '${escapeHtml(bm.sender_email)}', '${escapeHtml(item.item_title)}')">💬 Reply</button>
+                                            </div>`;
+                                    }
+                                    allMessagesHtml += `</div>`;
+                                }
+                            }
+                        } catch(err) { console.error(err); }
+                    }
+
+                    if (!foundAnyMsg) {
+                        allMessagesHtml += `<div style="text-align: center; color: #64748b; padding: 2rem;">No buyer messages received yet. When buyers message you about your vehicles, they will appear here!</div>`;
+                    }
+                    container.innerHTML = allMessagesHtml;
+                }
+            } catch(e) {
+                container.innerHTML = `<div style="text-align: center; color: #ef4444; padding: 1.5rem;">Failed to load messages inbox.</div>`;
             }
         }
 
@@ -1334,6 +1595,8 @@
             document.getElementById('renting-catalog-section').classList.add('hidden');
             document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
+            document.getElementById('sell-vehicle-section').classList.add('hidden');
+            document.getElementById('post-vehicle-wizard-section').classList.add('hidden');
             document.getElementById('buy-vehicle-section').classList.remove('hidden');
             document.getElementById('vehicle-search-results').innerHTML = '';
         }
@@ -1350,7 +1613,6 @@
             container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:1.5rem;">Searching real posted vehicles...</div>`;
 
             try {
-                // Fetching from market-items and rentals where vehicle might be listed
                 const res = await fetch('/api/market-items');
                 const data = await res.json();
 
@@ -1369,8 +1631,9 @@
                                     <p class="item-title">${escapeHtml(v.item_title)}</p>
                                     <p class="item-price">₹${v.item_price}</p>
                                     <p class="item-seller">Seller: ${escapeHtml(v.seller_name)} | Distance: ~10 km</p>
+                                    <p style="font-size:0.8rem; color:#475569; margin:0.2rem 0;">${escapeHtml(v.description || '')}</p>
                                     <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.4rem;">
-                                        <button type="button" class="action-btn" onclick="openBuyVehicleModal('${escapeHtml(v.item_title)}', ${v.item_price}, '${escapeHtml(v.seller_email)}', '${escapeHtml(v.seller_name)}', '${escapeHtml(v.item_title)}', ${v.id})">🚀 Buy Now</button>
+                                        <button type="button" class="action-btn" onclick="openBuyVehicleModal('${escapeHtml(v.item_title)}', ${v.item_price}, '${escapeHtml(v.seller_email)}', '${escapeHtml(v.seller_name)}', '${escapeHtml(v.description || v.item_title)}', ${v.id}, '${escapeHtml(v.whatsapp || '')}')">🚀 Buy Now</button>
                                         <button type="button" class="action-btn" style="background:#0ea5e9;" onclick="openPrivateChat(${v.id}, '${escapeHtml(v.seller_email)}', '${escapeHtml(v.item_title)}')">💬 Message Seller</button>
                                     </div>
                                 </div>
@@ -1393,9 +1656,9 @@
             return str.slice(0, 4) + 'xxxxxx';
         }
 
-        function openBuyVehicleModal(title, price, email, sellerName, description, itemId) {
+        function openBuyVehicleModal(title, price, email, sellerName, description, itemId, mobile) {
             const maskedEmail = maskContact(email);
-            const maskedMobile = maskContact('9876543210'); // Simulated seller mobile or actual if available
+            const maskedMobile = maskContact(mobile || '9876543210');
 
             document.getElementById('bv-modal-title').innerText = `🚗 Buy Now: ${title}`;
             document.getElementById('bv-modal-content').innerHTML = `
@@ -1404,7 +1667,7 @@
                 <p><strong>Seller Name:</strong> ${sellerName}</p>
                 <p><strong>Seller Email:</strong> ${maskedEmail}</p>
                 <p><strong>Seller Mobile:</strong> ${maskedMobile}</p>
-                <p><strong>Description:</strong> Well maintained ${description}. Verified genuine listing.</p>
+                <p><strong>Description:</strong> ${description}</p>
             `;
             document.getElementById('bv-modal-chat-btn').setAttribute('onclick', `closeBuyVehicleModal(); openPrivateChat(${itemId}, '${email}', '${title}')`);
             document.getElementById('buy-vehicle-modal').classList.remove('hidden');
@@ -1425,6 +1688,8 @@
             document.getElementById('renting-wizard-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.add('hidden');
             document.getElementById('buy-vehicle-section').classList.add('hidden');
+            document.getElementById('sell-vehicle-section').classList.add('hidden');
+            document.getElementById('post-vehicle-wizard-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.remove('hidden');
             postJobStep = 1;
@@ -1642,6 +1907,8 @@
             document.getElementById('renting-wizard-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.add('hidden');
             document.getElementById('buy-vehicle-section').classList.add('hidden');
+            document.getElementById('sell-vehicle-section').classList.add('hidden');
+            document.getElementById('post-vehicle-wizard-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('job-seeker-section').classList.remove('hidden');
             loadRealJobVacancies();
@@ -1923,6 +2190,8 @@
             document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
             document.getElementById('buy-vehicle-section').classList.add('hidden');
+            document.getElementById('sell-vehicle-section').classList.add('hidden');
+            document.getElementById('post-vehicle-wizard-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('renting-wizard-section').classList.remove('hidden');
 
@@ -2100,6 +2369,8 @@
             document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
             document.getElementById('buy-vehicle-section').classList.add('hidden');
+            document.getElementById('sell-vehicle-section').classList.add('hidden');
+            document.getElementById('post-vehicle-wizard-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.remove('hidden');
 
@@ -2158,6 +2429,8 @@
             document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
             document.getElementById('buy-vehicle-section').classList.add('hidden');
+            document.getElementById('sell-vehicle-section').classList.add('hidden');
+            document.getElementById('post-vehicle-wizard-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('selling-wizard-section').classList.remove('hidden');
 
@@ -2287,6 +2560,8 @@
             document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
             document.getElementById('buy-vehicle-section').classList.add('hidden');
+            document.getElementById('sell-vehicle-section').classList.add('hidden');
+            document.getElementById('post-vehicle-wizard-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('buying-catalog-section').classList.remove('hidden');
 
@@ -2325,6 +2600,7 @@
                             <p class="item-title">${escapeHtml(item.item_title)}</p>
                             <p class="item-price">₹${item.item_price}</p>
                             <p class="item-seller">Seller: ${escapeHtml(item.seller_name)}</p>
+                            <p style="font-size:0.8rem; color:#475569; margin:0.2rem 0;">${escapeHtml(item.description || '')}</p>
                             <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
                                 <button type="button" class="action-btn" onclick="openPrivateChat(${item.id}, '${escapeHtml(item.seller_email)}', '${escapeHtml(item.item_title)}')">💬 Message Seller</button>
                             </div>
@@ -2349,6 +2625,8 @@
             document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
             document.getElementById('buy-vehicle-section').classList.add('hidden');
+            document.getElementById('sell-vehicle-section').classList.add('hidden');
+            document.getElementById('post-vehicle-wizard-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('my-items-section').classList.remove('hidden');
 
@@ -2482,6 +2760,8 @@
             document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
             document.getElementById('buy-vehicle-section').classList.add('hidden');
+            document.getElementById('sell-vehicle-section').classList.add('hidden');
+            document.getElementById('post-vehicle-wizard-section').classList.add('hidden');
             showApp(userDataBuffer);
         }
 
@@ -2520,6 +2800,8 @@
             document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
             document.getElementById('buy-vehicle-section').classList.add('hidden');
+            document.getElementById('sell-vehicle-section').classList.add('hidden');
+            document.getElementById('post-vehicle-wizard-section').classList.add('hidden');
             document.getElementById('app-section').classList.remove('hidden');
             
             document.getElementById('user-name').innerText = "Hi, " + (profile.sweetName || 'User');
