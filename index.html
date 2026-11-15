@@ -633,11 +633,11 @@
                 <form onsubmit="submitJobApplication(event)">
                     <div class="form-step">
                         <label>Your Full Name</label>
-                        <input type="text" id="applicant-name" required placeholder="e.g. Uttam Rai" value="">
+                        <input type="text" id="applicant-name" required placeholder="e.g. Uttam Rai">
                     </div>
                     <div class="form-step">
                         <label>Your Email & Contact Number</label>
-                        <input type="text" id="applicant-contact" required placeholder="Email or phone number" value="">
+                        <input type="text" id="applicant-contact" required placeholder="Email or phone number">
                     </div>
                     <div class="form-step">
                         <label>Why should we hire you? (Cover Note)</label>
@@ -698,7 +698,7 @@
             <div class="modal-card" style="max-width: 500px;">
                 <button class="close-modal-btn" onclick="closePrivateChatModal()">Close</button>
                 <h3 id="private-chat-title">💬 Private Negotiation</h3>
-                <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.75rem;">🔒 Secure direct conversation between buyer/renter and owner.</p>
+                <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.75rem;">🔒 Secure direct conversation between job seeker and employer.</p>
                 
                 <div id="private-messages-feed" style="height: 250px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0.75rem; margin-bottom: 0.75rem; background: #f8fafc; display: flex; flex-direction: column; gap: 0.5rem;">
                     <div style="text-align: center; color: #94a3b8; font-size: 0.8rem; padding: 2rem 0;">Loading secure messages...</div>
@@ -1179,7 +1179,7 @@
             }
         }
 
-        /* --- JOB SEEKER HUB LOGIC --- */
+        /* --- REAL JOB SEEKER HUB LOGIC --- */
         function showJobSeekerHub() {
             document.getElementById('login-section').classList.add('hidden');
             document.getElementById('wizard-section').classList.add('hidden');
@@ -1193,7 +1193,7 @@
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('job-seeker-section').classList.remove('hidden');
 
-            loadJobVacancies();
+            loadRealJobVacancies();
         }
 
         function toggleJobFilterModal() {
@@ -1206,43 +1206,39 @@
             currentMaxKm = Math.min(150, Math.max(1, val));
             document.getElementById('km-display').innerText = currentMaxKm;
             toggleJobFilterModal();
-            loadJobVacancies();
+            loadRealJobVacancies();
         }
 
-        async function loadJobVacancies() {
+        async function loadRealJobVacancies() {
             const container = document.getElementById('job-vacancies-container');
-            container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:2rem;">Searching nearest job vacancies within ${currentMaxKm} km...</div>`;
+            container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:2rem;">Loading real job vacancies within ${currentMaxKm} km...</div>`;
 
-            // Sample mock/dynamic job vacancies sorted by proximity distance
-            setTimeout(() => {
-                const sampleJobs = [
-                    { id: 101, title: 'Store Sales Associate', company: 'Gangtok Emporium', salary: '₹15,000 / mo', distance: 2, location: 'MG Road, Gangtok' },
-                    { id: 102, title: 'Hotel Front Desk Receptionist', company: 'Hotel Mount View', salary: '₹18,000 / mo', distance: 5, location: 'Deorali, Gangtok' },
-                    { id: 103, title: 'Delivery Executive (Bike Required)', company: 'QuickBite Foods', salary: '₹22,000 / mo', distance: 8, location: 'Tadong, Gangtok' },
-                    { id: 104, title: 'Cafe Barista & Server',company: 'Cloud Cafe', salary: '₹14,000 / mo', distance: 12, location: 'Lal Bazaar, Gangtok' },
-                    { id: 105, title: 'Tourist Guide & Coordinator', company: 'Sikkim Travels', salary: '₹25,000 / mo', distance: 35, location: 'Ranipool' }
-                ];
+            try {
+                const res = await fetch(`/api/jobs?max_km=${currentMaxKm}`);
+                const data = await res.json();
 
-                const filtered = sampleJobs.filter(j => j.distance <= currentMaxKm);
-
-                if (filtered.length > 0) {
-                    container.innerHTML = filtered.map(job => `
+                if (data.success && data.items && data.items.length > 0) {
+                    container.innerHTML = data.items.map(job => `
                         <div class="item-card">
                             <div class="item-thumb" style="display:flex; align-items:center; justify-content:center; background:#e0f2fe; color:#0284c7; font-size:1.5rem; font-weight:bold;">💼</div>
                             <div class="item-details">
                                 <p class="item-title">${escapeHtml(job.title)}</p>
                                 <p class="item-price">${escapeHtml(job.salary)} <span style="font-size:0.75rem; color:#64748b; font-weight:normal;">(${escapeHtml(job.company)})</span></p>
-                                <p class="item-seller">📍 Location: ${escapeHtml(job.location)} • <strong>${job.distance} km away</strong></p>
+                                <p class="item-seller">📍 Location: ${escapeHtml(job.location)} • <strong>${job.distance_km} km away</strong></p>
+                                <p style="font-size: 0.8rem; color: #475569; margin: 0.2rem 0;">${escapeHtml(job.description || '')}</p>
                                 <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top:0.4rem;">
                                     <button type="button" class="action-btn" onclick="openApplyJobModal(${job.id}, '${escapeHtml(job.title)}')">📄 Apply Now</button>
+                                    <button type="button" class="action-btn" style="background:#0ea5e9;" onclick="openPrivateChat(${job.id}, '${escapeHtml(job.employer_email)}', '${escapeHtml(job.title)}')">💬 Message Employer</button>
                                 </div>
                             </div>
                         </div>
                     `).join('');
                 } else {
-                    container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 2rem;">No job vacancies found within ${currentMaxKm} km. Try increasing the distance filter.</div>`;
+                    container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 2.5rem;">No real job vacancies posted yet within ${currentMaxKm} km. When employers post jobs, they will appear here!</div>`;
                 }
-            }, 300);
+            } catch (err) {
+                container.innerHTML = `<div style="text-align: center; color: #ef4444; padding: 2rem;">Failed to load job listings from server.</div>`;
+            }
         }
 
         function openApplyJobModal(jobId, jobTitle) {
@@ -1258,10 +1254,33 @@
             activeJobIdForApply = null;
         }
 
-        function submitJobApplication(e) {
+        async function submitJobApplication(e) {
             e.preventDefault();
-            alert("✅ Job application submitted successfully! The employer will review your details.");
-            closeApplyJobModal();
+            const payload = {
+                action: 'apply_job',
+                job_id: activeJobIdForApply,
+                applicant_email: userDataBuffer.email || '',
+                applicant_name: document.getElementById('applicant-name').value.trim(),
+                contact: document.getElementById('applicant-contact').value.trim(),
+                note: document.getElementById('applicant-note').value.trim()
+            };
+
+            try {
+                const res = await fetch('/api/jobs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert("✅ Job application submitted successfully!");
+                    closeApplyJobModal();
+                } else {
+                    alert("❌ Failed to submit application.");
+                }
+            } catch(err) {
+                alert("⚠️ Error submitting application.");
+            }
         }
 
         /* --- RENTING WIZARD LOGIC --- */
@@ -1970,7 +1989,7 @@
                 showIntentSelectionScreen();
                 return;
             }
-            document.getElementById('login-section').classList.remove('hidden');
+            document.getElementById('login-section').classList.add('hidden');
         }
 
         function escapeHtml(str) { return str ? str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : ''; }
