@@ -598,9 +598,34 @@
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 0.75rem; margin-bottom: 1rem;">
                 <span style="font-size: 0.85rem; font-weight: 600; color: #334155;">📍 Distance Filter: <span id="km-display">150</span> km</span>
-                <button type="button" onclick="toggleJobFilterModal()" style="background: var(--primary); color: white; border: none; padding: 0.35rem 0.7rem; border-radius: 0.375rem; font-size: 0.8rem; font-weight: 600; cursor: pointer;">⚙️ Filter KM</button>
+                <div style="display: flex; gap: 0.4rem;">
+                    <button type="button" onclick="showMyPostedJobs()" style="background: #16a34a; color: white; border: none; padding: 0.35rem 0.7rem; border-radius: 0.375rem; font-size: 0.8rem; font-weight: 600; cursor: pointer;">📋 My Posted Jobs</button>
+                    <button type="button" onclick="toggleJobFilterModal()" style="background: var(--primary); color: white; border: none; padding: 0.35rem 0.7rem; border-radius: 0.375rem; font-size: 0.8rem; font-weight: 600; cursor: pointer;">⚙️ Filter KM</button>
+                </div>
             </div>
             <div id="job-vacancies-container" class="catalog-container"></div>
+        </div>
+
+        <!-- EMPLOYER: MY POSTED JOBS & APPLICANTS SECTION -->
+        <div id="my-jobs-section" class="hidden">
+            <div class="dashboard-topbar">
+                <button type="button" onclick="showJobSeekerHub()" style="background:#e2e8f0; border:none; padding:0.4rem 0.8rem; border-radius:0.375rem; font-weight:600; cursor:pointer; font-size:0.8rem;">← Back to Job Hub</button>
+                <h3 style="margin:0; font-size: 1rem; color:#0f172a;">📋 Your Posted Jobs & Applicants</h3>
+            </div>
+            <p style="font-size: 0.85rem; color: #64748b; text-align: left; margin-bottom: 1rem;">View who applied for your jobs, check candidate details, and hire them directly.</p>
+            <div id="my-jobs-container" class="catalog-container"></div>
+        </div>
+
+        <!-- VIEW APPLICANTS MODAL -->
+        <div id="applicants-modal" class="modal-overlay hidden">
+            <div class="modal-card" style="max-width: 500px;">
+                <button class="close-modal-btn" onclick="closeApplicantsModal()">Close</button>
+                <h3 id="applicants-modal-title">👥 Job Applicants</h3>
+                <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 1rem;">Review applicant details and click Hire to update vacancies.</p>
+                <div id="applicants-list-container" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div style="text-align: center; color: #94a3b8; padding: 2rem;">Loading applicants...</div>
+                </div>
+            </div>
         </div>
 
         <!-- POST JOB VACANCY WIZARD SECTION -->
@@ -656,14 +681,26 @@
                         <input type="text" id="applicant-name" required placeholder="e.g. Uttam Rai">
                     </div>
                     <div class="form-step">
-                        <label>Your Email & Contact Number</label>
-                        <input type="text" id="applicant-contact" required placeholder="Email or phone number">
+                        <label>Your Email Address (Mandatory)</label>
+                        <input type="email" id="applicant-email" required placeholder="e.g. uttam@gmail.com">
+                    </div>
+                    <div class="form-step">
+                        <label>Your 10-Digit Mobile Number (Mandatory)</label>
+                        <input type="tel" id="applicant-phone" maxlength="10" required placeholder="e.g. 9876543210">
+                    </div>
+                    <div class="form-step">
+                        <label>Have you read and accepted the job requirement details?</label>
+                        <select id="applicant-accept-req" required onchange="checkRequirementAcceptance(this.value)">
+                            <option value="" disabled selected>Select Yes or No</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
                     </div>
                     <div class="form-step">
                         <label>Why should we hire you? (Cover Note)</label>
                         <textarea id="applicant-note" rows="3" required placeholder="Briefly describe your experience..."></textarea>
                     </div>
-                    <button type="submit" class="next-btn">Submit Application</button>
+                    <button type="submit" id="submit-app-btn" class="next-btn">Submit Application</button>
                 </form>
             </div>
         </div>
@@ -878,7 +915,7 @@
         let postJobDraft = {
             businessType: '',
             currentStaff: '',
-            vacancies: '',
+            vacancies: '1',
             forGender: 'Male',
             maleCount: '',
             femaleCount: '',
@@ -967,6 +1004,7 @@
             document.getElementById('renting-wizard-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.add('hidden');
             document.getElementById('job-seeker-section').classList.add('hidden');
+            document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('intent-section').classList.remove('hidden');
@@ -1137,7 +1175,7 @@
             if (currentStep === 7) userDataBuffer.aadharNumber = `XXXX-XXXX-${document.getElementById('ans-aadhar').value.slice(8)}`;
             if (currentStep === 8) userDataBuffer.panNumber = document.getElementById('ans-pan').value.toUpperCase();
             if (currentStep === 9 && !userDataBuffer.faceIdUrl) { alert("Please capture your Face ID!"); return; }
-            if (currentStep === 10) userDataBuffer.mobileNumber = `XXXXXX${document.getElementById('ans-mobile').value.slice(6)}`;
+            if (currentStep === 10) userDataBuffer.mobileNumber = document.getElementById('ans-mobile').value.replace(/\D/g, '');
 
             if (currentStep < 11) {
                 currentStep++;
@@ -1230,6 +1268,7 @@
         function startPostJobWizard() {
             document.getElementById('intent-section').classList.add('hidden');
             document.getElementById('job-seeker-section').classList.add('hidden');
+            document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('buying-catalog-section').classList.add('hidden');
             document.getElementById('selling-wizard-section').classList.add('hidden');
             document.getElementById('my-items-section').classList.add('hidden');
@@ -1418,6 +1457,7 @@
                     salary: `₹${postJobDraft.salary} / mo`,
                     distance_km: 5,
                     location: postJobDraft.location,
+                    vacancies_left: parseInt(postJobDraft.vacancies) || 1,
                     description: `Shift: ${postJobDraft.shift} | Hours: ${postJobDraft.workingHours} | Schooling: ${postJobDraft.schooling} | Vacancies: ${postJobDraft.vacancies} | Benefits: PF(${postJobDraft.pf}), ESIC(${postJobDraft.esic}), Food(${postJobDraft.fooding}), Lodge(${postJobDraft.lodging})`
                 };
 
@@ -1444,6 +1484,7 @@
         function showJobSeekerHub() {
             document.getElementById('intent-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
+            document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('buying-catalog-section').classList.add('hidden');
             document.getElementById('selling-wizard-section').classList.add('hidden');
             document.getElementById('my-items-section').classList.add('hidden');
@@ -1479,7 +1520,7 @@
                         <div class="item-card">
                             <div class="item-thumb" style="display:flex; align-items:center; justify-content:center; background:#e0f2fe; color:#0284c7; font-size:1.5rem; font-weight:bold;">💼</div>
                             <div class="item-details">
-                                <p class="item-title">${escapeHtml(job.title)}</p>
+                                <p class="item-title">${escapeHtml(job.title)} <span style="font-size:0.7rem; background:#dbeafe; color:#1d4ed8; padding:0.1rem 0.4rem; border-radius:0.25rem;">Vacancies: ${job.vacancies_left !== undefined ? job.vacancies_left : '1'}</span></p>
                                 <p class="item-price">${escapeHtml(job.salary)} <span style="font-size:0.75rem; color:#64748b; font-weight:normal;">(${escapeHtml(job.company)})</span></p>
                                 <p class="item-seller">📍 Location: ${escapeHtml(job.location)} • <strong>${job.distance_km} km away</strong></p>
                                 <p style="font-size: 0.8rem; color: #475569; margin: 0.2rem 0;">${escapeHtml(job.description || '')}</p>
@@ -1502,7 +1543,10 @@
             activeJobIdForApply = jobId;
             document.getElementById('apply-job-title').innerText = `📄 Apply for: ${jobTitle}`;
             document.getElementById('applicant-name').value = userDataBuffer.sweetName || '';
-            document.getElementById('applicant-contact').value = userDataBuffer.mobileNumber || userDataBuffer.email || '';
+            document.getElementById('applicant-email').value = userDataBuffer.email || '';
+            document.getElementById('applicant-phone').value = userDataBuffer.mobileNumber || '';
+            document.getElementById('applicant-accept-req').value = '';
+            document.getElementById('submit-app-btn').disabled = true;
             document.getElementById('apply-job-modal').classList.remove('hidden');
         }
 
@@ -1511,14 +1555,25 @@
             activeJobIdForApply = null;
         }
 
+        function checkRequirementAcceptance(val) {
+            const submitBtn = document.getElementById('submit-app-btn');
+            if (val === 'Yes') {
+                submitBtn.disabled = false;
+            } else {
+                submitBtn.disabled = true;
+                alert("Please read the job requirements carefully and accept them to apply, or return to review the job vacancy details.");
+                closeApplyJobModal();
+            }
+        }
+
         async function submitJobApplication(e) {
             e.preventDefault();
             const payload = {
                 action: 'apply_job',
                 job_id: activeJobIdForApply,
-                applicant_email: userDataBuffer.email || '',
+                applicant_email: document.getElementById('applicant-email').value.trim(),
                 applicant_name: document.getElementById('applicant-name').value.trim(),
-                contact: document.getElementById('applicant-contact').value.trim(),
+                contact: document.getElementById('applicant-phone').value.trim(),
                 note: document.getElementById('applicant-note').value.trim()
             };
 
@@ -1530,7 +1585,7 @@
                 });
                 const result = await res.json();
                 if (result.success) {
-                    alert("✅ Job application submitted successfully!");
+                    alert("✅ Job application submitted successfully with email and phone number!");
                     closeApplyJobModal();
                 } else {
                     alert("❌ Failed to submit application.");
@@ -1538,6 +1593,167 @@
             } catch(err) {
                 alert("⚠️ Error submitting application.");
             }
+        }
+
+        /* --- EMPLOYER: VIEW POSTED JOBS & APPLICANTS --- */
+        async function showMyPostedJobs() {
+            document.getElementById('job-seeker-section').classList.add('hidden');
+            document.getElementById('my-jobs-section').classList.remove('hidden');
+            const container = document.getElementById('my-jobs-container');
+            container.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:2rem;">Loading your posted jobs...</div>`;
+
+            try {
+                const res = await fetch(`/api/jobs?max_km=150`);
+                const data = await res.json();
+                const userEmail = userDataBuffer.email || '';
+
+                if (data.success && data.items) {
+                    const myJobs = data.items.filter(j => j.employer_email === userEmail || userEmail === 'dayaandjetalal18@gmail.com');
+                    if (myJobs.length > 0) {
+                        container.innerHTML = myJobs.map(job => `
+                            <div class="item-card">
+                                <div class="item-thumb" style="display:flex; align-items:center; justify-content:center; background:#dcfce7; color:#166534; font-size:1.5rem; font-weight:bold;">📋</div>
+                                <div class="item-details">
+                                    <p class="item-title">${escapeHtml(job.title)} <span style="font-size:0.7rem; background:#fee2e2; color:#991b1b; padding:0.1rem 0.4rem; border-radius:0.25rem;">Vacancies left: ${job.vacancies_left !== undefined ? job.vacancies_left : 1}</span></p>
+                                    <p class="item-price">${escapeHtml(job.salary)} <span style="font-size:0.75rem; color:#64748b; font-weight:normal;">(${escapeHtml(job.company)})</span></p>
+                                    <p class="item-seller">📍 Location: ${escapeHtml(job.location)}</p>
+                                    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top:0.4rem;">
+                                        <button type="button" class="action-btn" onclick="openApplicantsModal(${job.id}, '${escapeHtml(job.title)}')">👥 View Applicants & Hire</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 2.5rem;">You haven't posted any job vacancies yet. Use 'Post Job Vacancy' from the menu!</div>`;
+                    }
+                }
+            } catch(e) {
+                container.innerHTML = `<div style="text-align: center; color: #ef4444; padding: 2rem;">Failed to load your posted jobs.</div>`;
+            }
+        }
+
+        async function openApplicantsModal(jobId, jobTitle) {
+            document.getElementById('applicants-modal-title').innerText = `👥 Applicants for: ${jobTitle}`;
+            document.getElementById('applicants-list-container').innerHTML = `<div style="text-align:center; color:#94a3b8; padding:2rem;">Loading applicants...</div>`;
+            document.getElementById('applicants-modal').classList.remove('hidden');
+
+            try {
+                const res = await fetch(`/api/job-applicants?job_id=${jobId}`);
+                const data = await res.json();
+                const container = document.getElementById('applicants-list-container');
+
+                if (data.success && data.applicants && data.applicants.length > 0) {
+                    container.innerHTML = data.applicants.map(app => `
+                        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:0.5rem; padding:0.75rem; display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <p style="margin:0; font-weight:700; font-size:0.9rem; color:#0f172a;">${escapeHtml(app.applicant_name)}</p>
+                                <p style="margin:0.2rem 0; font-size:0.8rem; color:#475569;">📧 Email: ${escapeHtml(app.applicant_email)} | 📱 Phone: ${escapeHtml(app.contact)}</p>
+                                <p style="margin:0; font-size:0.78rem; color:#64748b;">Note: ${escapeHtml(app.note)}</p>
+                            </div>
+                            <button type="button" class="action-btn" style="background:#16a34a; margin-top:0;" onclick="hireApplicant(${jobId}, ${app.id}, '${escapeHtml(app.applicant_name)}')">✅ Hire</button>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 2rem;">No applicants have applied for this job yet.</div>`;
+                }
+            } catch(e) {
+                document.getElementById('applicants-list-container').innerHTML = `<div style="text-align: center; color: #ef4444; padding: 1.5rem;">Failed to load applicants.</div>`;
+            }
+        }
+
+        function closeApplicantsModal() {
+            document.getElementById('applicants-modal').classList.add('hidden');
+        }
+
+        async function hireApplicant(jobId, applicantId, applicantName) {
+            if (!confirm(`Are you sure you want to hire ${applicantName}? This will decrement vacancy count and auto-remove the job if vacancies reach 0.`)) return;
+
+            try {
+                const res = await fetch('/api/jobs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'hire_applicant', job_id: jobId, applicant_id: applicantId })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert(`🎉 Successfully hired ${applicantName}! Job vacancies updated.`);
+                    closeApplicantsModal();
+                    showMyPostedJobs();
+                } else {
+                    alert("❌ Failed to process hiring.");
+                }
+            } catch(e) {
+                alert("⚠️ Network error while hiring.");
+            }
+        }
+
+        /* --- PRIVATE CHAT --- */
+        function openPrivateChat(itemId, recipientEmail, itemTitle) {
+            activePrivateChat = { itemId, recipientEmail, title: itemTitle };
+            document.getElementById('private-chat-title').innerText = `💬 Chat: ${itemTitle}`;
+            document.getElementById('private-chat-modal').classList.remove('hidden');
+            fetchPrivateMessages();
+            if (privateChatPollInterval) clearInterval(privateChatPollInterval);
+            privateChatPollInterval = setInterval(fetchPrivateMessages, 4000);
+        }
+
+        function closePrivateChatModal() {
+            document.getElementById('private-chat-modal').classList.add('hidden');
+            if (privateChatPollInterval) clearInterval(privateChatPollInterval);
+            activePrivateChat = { itemId: null, recipientEmail: null, title: '' };
+        }
+
+        async function fetchPrivateMessages() {
+            if (!activePrivateChat.itemId) return;
+            try {
+                const userEmail = userDataBuffer.email || '';
+                const res = await fetch(`/api/item-messages?item_id=${activePrivateChat.itemId}&email=${encodeURIComponent(userEmail)}`);
+                const data = await res.json();
+                const feed = document.getElementById('private-messages-feed');
+
+                if (data.success && data.messages && data.messages.length > 0) {
+                    feed.innerHTML = data.messages.map(m => `
+                        <div class="chat-bubble" style="background: ${m.sender_email === userEmail ? '#eff6ff' : '#ffffff'};">
+                            <div class="chat-bubble-header">
+                                <span class="chat-bubble-user">${escapeHtml(m.sender_name)}</span>
+                                <span>${new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                            </div>
+                            <div style="color: #1e293b; word-break: break-word;">${escapeHtml(m.message)}</div>
+                        </div>
+                    `).join('');
+                    feed.scrollTop = feed.scrollHeight;
+                } else {
+                    feed.innerHTML = `<div style="text-align: center; color: #94a3b8; font-size: 0.8rem; padding: 2rem 0;">No messages yet. Send a message to start negotiating privately!</div>`;
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function sendPrivateMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('private-chat-input');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            const payload = {
+                item_id: activePrivateChat.itemId,
+                sender_email: userDataBuffer.email,
+                sender_name: userDataBuffer.sweetName || 'User',
+                recipient_email: activePrivateChat.recipientEmail,
+                message: msg
+            };
+
+            try {
+                const res = await fetch('/api/item-messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    input.value = '';
+                    fetchPrivateMessages();
+                }
+            } catch (err) { console.error(err); }
         }
 
         /* --- RENTING WIZARD LOGIC --- */
@@ -1552,6 +1768,7 @@
             document.getElementById('my-items-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.add('hidden');
             document.getElementById('job-seeker-section').classList.add('hidden');
+            document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('renting-wizard-section').classList.remove('hidden');
@@ -1698,12 +1915,7 @@
                         body: JSON.stringify(payload)
                     });
                     const text = await res.text();
-                    let result;
-                    try {
-                        result = JSON.parse(text);
-                    } catch (parseErr) {
-                        throw new Error("API endpoint /api/rentals not found yet.");
-                    }
+                    let result = JSON.parse(text);
 
                     if (result.success) {
                         await prefetchRentals();
@@ -1732,6 +1944,7 @@
             document.getElementById('my-items-section').classList.add('hidden');
             document.getElementById('renting-wizard-section').classList.add('hidden');
             document.getElementById('job-seeker-section').classList.add('hidden');
+            document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.remove('hidden');
@@ -1788,6 +2001,7 @@
             document.getElementById('renting-wizard-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.add('hidden');
             document.getElementById('job-seeker-section').classList.add('hidden');
+            document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('selling-wizard-section').classList.remove('hidden');
@@ -1887,12 +2101,7 @@
                         body: JSON.stringify(payload)
                     });
                     const text = await res.text();
-                    let result;
-                    try {
-                        result = JSON.parse(text);
-                    } catch (parseErr) {
-                        throw new Error("API endpoint /api/market-items not found yet.");
-                    }
+                    let result = JSON.parse(text);
 
                     if (result.success) {
                         await prefetchMarketItems();
@@ -1920,6 +2129,7 @@
             document.getElementById('renting-wizard-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.add('hidden');
             document.getElementById('job-seeker-section').classList.add('hidden');
+            document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('buying-catalog-section').classList.remove('hidden');
@@ -1980,6 +2190,7 @@
             document.getElementById('renting-wizard-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.add('hidden');
             document.getElementById('job-seeker-section').classList.add('hidden');
+            document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('my-items-section').classList.remove('hidden');
@@ -2032,74 +2243,6 @@
             } else {
                 container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 2rem;"><p>No items found.</p><button type="button" class="action-btn" onclick="startSellingWizard()">+ List Item</button></div>`;
             }
-        }
-
-        function openPrivateChat(itemId, recipientEmail, itemTitle) {
-            activePrivateChat = { itemId, recipientEmail, title: itemTitle };
-            document.getElementById('private-chat-title').innerText = `💬 Chat: ${itemTitle}`;
-            document.getElementById('private-chat-modal').classList.remove('hidden');
-            fetchPrivateMessages();
-            if (privateChatPollInterval) clearInterval(privateChatPollInterval);
-            privateChatPollInterval = setInterval(fetchPrivateMessages, 4000);
-        }
-
-        function closePrivateChatModal() {
-            document.getElementById('private-chat-modal').classList.add('hidden');
-            if (privateChatPollInterval) clearInterval(privateChatPollInterval);
-            activePrivateChat = { itemId: null, recipientEmail: null, title: '' };
-        }
-
-        async function fetchPrivateMessages() {
-            if (!activePrivateChat.itemId) return;
-            try {
-                const userEmail = userDataBuffer.email || '';
-                const res = await fetch(`/api/item-messages?item_id=${activePrivateChat.itemId}&email=${encodeURIComponent(userEmail)}`);
-                const data = await res.json();
-                const feed = document.getElementById('private-messages-feed');
-
-                if (data.success && data.messages && data.messages.length > 0) {
-                    feed.innerHTML = data.messages.map(m => `
-                        <div class="chat-bubble" style="background: ${m.sender_email === userEmail ? '#eff6ff' : '#ffffff'};">
-                            <div class="chat-bubble-header">
-                                <span class="chat-bubble-user">${escapeHtml(m.sender_name)} (${escapeHtml(m.sender_email)})</span>
-                                <span>${new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                            </div>
-                            <div style="color: #1e293b; word-break: break-word;">${escapeHtml(m.message)}</div>
-                        </div>
-                    `).join('');
-                    feed.scrollTop = feed.scrollHeight;
-                } else {
-                    feed.innerHTML = `<div style="text-align: center; color: #94a3b8; font-size: 0.8rem; padding: 2rem 0;">No messages yet. Send a message to start negotiating privately!</div>`;
-                }
-            } catch (e) { console.error(e); }
-        }
-
-        async function sendPrivateMessage(e) {
-            e.preventDefault();
-            const input = document.getElementById('private-chat-input');
-            const msg = input.value.trim();
-            if (!msg) return;
-
-            const payload = {
-                item_id: activePrivateChat.itemId,
-                sender_email: userDataBuffer.email,
-                sender_name: userDataBuffer.sweetName || 'User',
-                recipient_email: activePrivateChat.recipientEmail,
-                message: msg
-            };
-
-            try {
-                const res = await fetch('/api/item-messages', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const result = await res.json();
-                if (result.success) {
-                    input.value = '';
-                    fetchPrivateMessages();
-                }
-            } catch (err) { console.error(err); }
         }
 
         async function toggleItemStatus(itemId, currentStatus) {
@@ -2179,6 +2322,7 @@
             document.getElementById('renting-wizard-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.add('hidden');
             document.getElementById('job-seeker-section').classList.add('hidden');
+            document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
             showApp(userDataBuffer);
         }
@@ -2215,6 +2359,7 @@
             document.getElementById('renting-wizard-section').classList.add('hidden');
             document.getElementById('renting-catalog-section').classList.add('hidden');
             document.getElementById('job-seeker-section').classList.add('hidden');
+            document.getElementById('my-jobs-section').classList.add('hidden');
             document.getElementById('post-job-wizard-section').classList.add('hidden');
             document.getElementById('app-section').classList.remove('hidden');
             
