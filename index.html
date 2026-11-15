@@ -983,6 +983,8 @@
             <img id="modal-face-thumb" class="review-face-thumb" alt="Face ID">
             <div class="review-box" id="modal-profile-details"></div>
 
+            <button type="button" class="next-btn" style="background: #ef4444; margin-top: 1rem;" onclick="permanentlyDeleteAccount()">🗑️ Delete Account & Start From Step 1</button>
+
             <hr style="border:0; border-top:1px solid #cbd5e1; margin: 1rem 0;">
             <h4 style="margin: 0 0 0.5rem 0; color: #0f172a; font-size: 0.95rem;">Request Detail Changes from Admin</h4>
             <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.75rem;">Submit changes to <strong style="color: #2563eb;">dayaandjetalal18@gmail.com</strong> for review.</p>
@@ -1085,16 +1087,19 @@
             prefetchMarketItems(); 
             prefetchRentals();
 
+            const isFreshStart = sessionStorage.getItem('force_fresh_start_' + payload.email);
             const savedProfile = localStorage.getItem('profile_' + payload.email);
-            if (savedProfile) {
+
+            if (savedProfile && !isFreshStart) {
                 const parsed = JSON.parse(savedProfile);
                 userDataBuffer = { ...parsed, picture: payload.picture || parsed.picture };
                 showIntentSelectionScreen();
             } else {
+                sessionStorage.removeItem('force_fresh_start_' + payload.email);
                 try {
                     const res = await fetch('/api/login?email=' + encodeURIComponent(payload.email));
                     const data = await res.json();
-                    if (data.exists && data.profile) {
+                    if (data.exists && data.profile && !isFreshStart) {
                         userDataBuffer = { ...data.profile, picture: payload.picture || data.profile.picture };
                         localStorage.setItem('profile_' + payload.email, JSON.stringify(userDataBuffer));
                         showIntentSelectionScreen();
@@ -1104,6 +1109,7 @@
 
                 document.getElementById('login-section').classList.add('hidden');
                 document.getElementById('wizard-section').classList.remove('hidden');
+                currentStep = 1;
                 renderWizardStep();
             }
         }
@@ -1543,7 +1549,6 @@
                         return;
                     }
 
-                    // Fetch messages for each item owned by the user
                     let allMessagesHtml = `<h4 style="margin-top:0; color:#0f172a;">💬 Buyer Messages Inbox</h4>`;
                     let foundAnyMsg = false;
 
@@ -2825,11 +2830,29 @@
             closeProfileModal();
         }
 
+        function permanentlyDeleteAccount() {
+            if (!confirm("Are you sure you want to permanently clear your local profile and start fresh from Step 1?")) return;
+            if (userDataBuffer && userDataBuffer.email) {
+                sessionStorage.setItem('force_fresh_start_' + userDataBuffer.email, 'true');
+            }
+            localStorage.clear();
+            sessionStorage.clear();
+            alert("Account data cleared. Redirecting to start fresh.");
+            location.reload();
+        }
+
+        function logout() {
+            if (userDataBuffer && userDataBuffer.email) {
+                sessionStorage.setItem('force_fresh_start_' + userDataBuffer.email, 'true');
+            }
+            localStorage.clear();
+            location.reload();
+        }
+
         function openNotificationModal() { document.getElementById('notification-modal').classList.remove('hidden'); document.getElementById('notif-dot').classList.add('hidden'); }
         function closeNotificationModal() { document.getElementById('notification-modal').classList.add('hidden'); }
         function reactNotif(id, emoji) {}
         function askAiBot() { document.getElementById('ai-response-box').innerText = "AI Bot: I'm here to help you navigate your marketplace dashboard!"; }
-        function logout() { localStorage.clear(); location.reload(); }
 
         window.onload = function () {
             const keys = Object.keys(localStorage);
